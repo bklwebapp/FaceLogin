@@ -197,6 +197,32 @@
     .type-in { color: var(--success); font-weight: 600; }
     .type-out { color: var(--warning); font-weight: 600; }
 
+    /* Calendar Styles */
+    .calendar-wrapper { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 16px; border: 1px solid var(--border-color); }
+    .calendar-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; font-size: 0.9em; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    
+    /* แก้ไขปฏิทินให้กดได้ */
+    .cal-day { 
+      aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+      border-radius: 8px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); 
+      font-size: 1.1em; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+      cursor: pointer;
+    }
+    .cal-day:not(.empty):hover { transform: scale(1.15); z-index: 2; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .cal-day.empty { background: transparent; border: none; cursor: default; }
+    .cal-day.in-out { background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.5); color: #34d399; font-weight: bold; box-shadow: inset 0 0 10px rgba(16,185,129,0.1); }
+    .cal-day.in-only { background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.5); color: #fbbf24; font-weight: bold; box-shadow: inset 0 0 10px rgba(245,158,11,0.1); }
+    .cal-day.absent { color: var(--text-muted); }
+    .cal-day.selected-day { border: 2px solid #fff; transform: scale(1.15); z-index: 3; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+
+    .cal-legend { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 16px; font-size: 0.85em; }
+    .legend-item { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+    .legend-dot { width: 12px; height: 12px; border-radius: 4px; }
+    .dot-green { background: rgba(16, 185, 129, 0.5); border: 1px solid #10b981; }
+    .dot-orange { background: rgba(245, 158, 11, 0.5); border: 1px solid #f59e0b; }
+    .dot-gray { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); }
+
     /* Alerts & Loading */
     .alert { padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9em; display: none; }
     .alert-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #fbbf24; }
@@ -388,8 +414,8 @@
         </div>
       </div>
       <div class="form-group">
-        <label>รัศมีที่ยอมรับ (กิโลเมตร) *ใส่ 0 เพื่อปิดตรวจสอบ</label>
-        <input type="number" step="0.01" id="cfg-rad" class="form-control" placeholder="เช่น 0.1 (100 เมตร)">
+        <label>รัศมีที่ยอมรับ (เมตร) *ใส่ 0 เพื่อปิดตรวจสอบ</label>
+        <input type="number" step="1" id="cfg-rad" class="form-control" placeholder="เช่น 100 (100 เมตร)">
       </div>
     </div>
 
@@ -408,8 +434,8 @@
 
     <div class="card-panel" style="padding: 16px;">
       
-      <!-- Filter เดือน/ปี -->
-      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+      <!-- Filter เดือน/ปี (สำหรับดูรายเดือน) -->
+      <div id="filter-monthly" style="display: flex; gap: 8px; margin-bottom: 16px;">
         <select id="report-month" class="form-control" style="flex: 1; padding: 10px;">
           <option value="1">มกราคม</option>
           <option value="2">กุมภาพันธ์</option>
@@ -432,10 +458,21 @@
         <button class="btn btn-primary" style="width: auto; padding: 10px 16px; border-radius: 12px;" onclick="app.loadReportData()">🔍</button>
       </div>
 
-      <!-- Tabs สลับมุมมอง -->
-      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-        <button class="btn btn-outline" id="btn-tab-detail" onclick="app.switchReportTab('detail')" style="padding: 8px; font-size: 0.85em; background: var(--primary); border-color: var(--primary); color: white;">📝 รายการละเอียด</button>
-        <button class="btn btn-outline" id="btn-tab-summary" onclick="app.switchReportTab('summary')" style="padding: 8px; font-size: 0.85em;">📊 สรุปรายบุคคล</button>
+      <!-- Filter รายวัน (สำหรับดูรายวัน) -->
+      <div id="filter-daily" style="display: none; gap: 8px; margin-bottom: 16px;">
+        <input type="date" id="report-date" class="form-control" style="flex: 1; padding: 10px;">
+        <button class="btn btn-primary" style="width: auto; padding: 10px 16px; border-radius: 12px;" onclick="app.loadDailyReport()">🔍</button>
+      </div>
+
+      <!-- Tabs สลับมุมมอง (2 บรรทัด) -->
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline" id="btn-tab-daily" onclick="app.switchReportTab('daily')" style="flex: 1; padding: 8px; font-size: 0.85em;">📅 สรุปรายวัน</button>
+          <button class="btn btn-outline" id="btn-tab-summary" onclick="app.switchReportTab('summary')" style="flex: 1; padding: 8px; font-size: 0.85em;">📊 สรุปเดือน</button>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline" id="btn-tab-detail" onclick="app.switchReportTab('detail')" style="flex: 1; padding: 8px; font-size: 0.85em; background: var(--primary); border-color: var(--primary); color: white;">📝 รายละเอียด</button>
+        </div>
       </div>
 
       <div id="report-status" style="text-align: center; color: var(--text-muted); margin-bottom: 10px;">
@@ -460,17 +497,33 @@
         </table>
       </div>
 
-      <!-- ตารางสรุปรายบุคคล -->
-      <div class="table-container" id="table-summary-container" style="display: none;">
-        <table id="summary-table">
+      <!-- ปฏิทินสรุปรายบุคคล -->
+      <div class="table-container" id="table-summary-container" style="display: none; background: transparent; border: none; overflow: visible;">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="color: #c7d2fe; font-size: 0.9em;">👤 เลือกพนักงานเพื่อดูปฏิทิน</label>
+          <select id="summary-user-select" class="form-control" onchange="app.renderCalendar()"></select>
+        </div>
+        <div class="calendar-wrapper" id="calendar-render-area">
+          <!-- Calendar injected here -->
+        </div>
+        
+        <!-- ส่วนแสดงรายละเอียดเวลาเมื่อคลิกวันที่ในปฏิทิน -->
+        <div id="cal-day-detail" style="margin-top: 16px; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid var(--border-color); display: none;">
+          <!-- Detail will be injected here -->
+        </div>
+      </div>
+
+      <!-- ตารางสรุปรายวัน -->
+      <div class="table-container" id="table-daily-container" style="display: none;">
+        <table id="daily-table">
           <thead>
             <tr>
               <th>ชื่อพนักงาน</th>
-              <th>เข้างาน (ครั้ง)</th>
-              <th>เลิกงาน (ครั้ง)</th>
+              <th>เข้างาน</th>
+              <th>เลิกงาน</th>
             </tr>
           </thead>
-          <tbody id="summary-tbody">
+          <tbody id="daily-tbody">
             <!-- Data will be injected here -->
           </tbody>
         </table>
@@ -519,7 +572,6 @@ const MATCH_THRESHOLD = 0.45;
 
 const app = {
   currentView: 'view-home',
-  // อ่านจาก localStorage ก่อน ถ้าไม่มีจะใช้ค่าที่ฝังไว้ในโค้ดแทน
   apiUrl: localStorage.getItem('gasApiUrl') || HARDCODED_API_URL, 
   modelsLoaded: false,
   knownFaces: [],
@@ -529,6 +581,44 @@ const app = {
   currentLng: null,
   matchedName: null,
   regCounter: 0,
+  calendarData: {},
+
+  // --- Utils (Thai Format) ---
+  formatThaiDate(dateStr) {
+    if (!dateStr || dateStr === '-') return '-';
+    if (typeof dateStr === 'string' && dateStr.includes('T')) {
+      try {
+        const d = new Date(dateStr);
+        const bkkDate = new Date(d.toLocaleString("en-US", {timeZone: "Asia/Bangkok"}));
+        const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        return `${bkkDate.getDate()} ${thaiMonths[bkkDate.getMonth()]} ${bkkDate.getFullYear() + 543}`;
+      } catch(e) {}
+    }
+
+    const parts = String(dateStr).split('/');
+    if (parts.length !== 3) return dateStr;
+    const day = parseInt(parts[0], 10);
+    const monthIndex = parseInt(parts[1], 10) - 1;
+    let year = parseInt(parts[2], 10);
+    if (year < 2500) year += 543; 
+    const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    return `${day} ${thaiMonths[monthIndex]} ${year}`;
+  },
+  
+  formatThaiTime(timeStr) {
+    if (!timeStr || timeStr === '-') return '-';
+    
+    if (typeof timeStr === 'string' && timeStr.includes('T') && timeStr.includes('Z')) {
+      try {
+        const d = new Date(timeStr);
+        return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) + ' น.';
+      } catch(e) {}
+    }
+
+    const parts = String(timeStr).split(':');
+    if (parts.length >= 2) return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')} น.`;
+    return timeStr;
+  },
 
   // --- 1. Core Functions ---
   init() {
@@ -550,7 +640,9 @@ const app = {
     if(viewId === 'view-scan') this.initScanView();
     if(viewId === 'view-register') this.initRegisterView();
     if(viewId === 'view-config') this.loadConfigData();
-    if(viewId === 'view-report') this.loadReportData();
+    if(viewId === 'view-report') {
+      this.switchReportTab('daily');
+    }
   },
 
   async loadAIModels(badgeId) {
@@ -612,7 +704,8 @@ const app = {
         document.getElementById('cfg-lat').value = pos.coords.latitude;
         document.getElementById('cfg-lng').value = pos.coords.longitude;
       },
-      err => alert('ดึงพิกัดไม่ได้: ' + err.message)
+      err => alert('ดึงพิกัดไม่ได้: ' + err.message),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } // เพิ่มความแม่นยำสูง
     );
   },
   async saveConfig() {
@@ -646,29 +739,54 @@ const app = {
 
   // --- 3. Report View ---
   switchReportTab(tab) {
-    if(tab === 'detail') {
-      document.getElementById('table-detail-container').style.display = 'block';
-      document.getElementById('table-summary-container').style.display = 'none';
-      document.getElementById('btn-tab-detail').style.background = 'var(--primary)';
-      document.getElementById('btn-tab-detail').style.borderColor = 'var(--primary)';
-      document.getElementById('btn-tab-detail').style.color = 'white';
-      document.getElementById('btn-tab-summary').style.background = 'transparent';
-      document.getElementById('btn-tab-summary').style.color = 'var(--text-main)';
+    const tabs = ['detail', 'summary', 'daily'];
+    tabs.forEach(t => {
+      const btn = document.getElementById('btn-tab-' + t);
+      const container = document.getElementById('table-' + t + '-container');
+      if(t === tab) {
+        btn.style.background = 'var(--primary)';
+        btn.style.borderColor = 'var(--primary)';
+        btn.style.color = 'white';
+        container.style.display = 'block';
+      } else {
+        btn.style.background = 'transparent';
+        btn.style.borderColor = 'var(--border-color)';
+        btn.style.color = 'var(--text-main)';
+        container.style.display = 'none';
+      }
+    });
+
+    if (tab === 'daily') {
+      document.getElementById('filter-monthly').style.display = 'none';
+      document.getElementById('filter-daily').style.display = 'flex';
+      
+      const dateEl = document.getElementById('report-date');
+      if(!dateEl.value) {
+        const bkkDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Bangkok"}));
+        const yyyy = bkkDate.getFullYear();
+        const mm = String(bkkDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(bkkDate.getDate()).padStart(2, '0');
+        dateEl.value = `${yyyy}-${mm}-${dd}`;
+      }
+      this.loadDailyReport();
     } else {
-      document.getElementById('table-detail-container').style.display = 'none';
-      document.getElementById('table-summary-container').style.display = 'block';
-      document.getElementById('btn-tab-summary').style.background = 'var(--primary)';
-      document.getElementById('btn-tab-summary').style.borderColor = 'var(--primary)';
-      document.getElementById('btn-tab-summary').style.color = 'white';
-      document.getElementById('btn-tab-detail').style.background = 'transparent';
-      document.getElementById('btn-tab-detail').style.color = 'var(--text-main)';
+      document.getElementById('filter-monthly').style.display = 'flex';
+      document.getElementById('filter-daily').style.display = 'none';
+      
+      const tbody = document.getElementById('report-tbody');
+      if (tbody.innerHTML.trim() === '') {
+        this.loadReportData();
+      }
     }
   },
 
   async loadReportData() {
     const tbody = document.getElementById('report-tbody');
-    const summaryTbody = document.getElementById('summary-tbody');
+    const userSelect = document.getElementById('summary-user-select');
+    const calendarArea = document.getElementById('calendar-render-area');
     const status = document.getElementById('report-status');
+    const detailDiv = document.getElementById('cal-day-detail');
+    if(detailDiv) detailDiv.style.display = 'none'; // ซ่อนกล่องเวลาคลิกวัน
     
     const d = new Date();
     const mEl = document.getElementById('report-month');
@@ -680,7 +798,9 @@ const app = {
     }
 
     tbody.innerHTML = '';
-    summaryTbody.innerHTML = '';
+    userSelect.innerHTML = '';
+    calendarArea.innerHTML = '';
+    this.calendarData = {};
     status.style.display = 'block';
     status.innerHTML = '<span class="loader"></span> กำลังดึงข้อมูล...';
 
@@ -691,27 +811,42 @@ const app = {
       const year = yEl.value;
       const logs = await fetch(`${this.apiUrl}?action=getLogs&month=${month}&year=${year}`).then(r => r.json());
       
+      if(logs.error) throw new Error(logs.error);
+      
       status.style.display = 'none';
-      if(logs.length === 0) {
+      if(!Array.isArray(logs) || logs.length === 0) {
          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">ไม่มีข้อมูลในเดือนนี้</td></tr>';
-         summaryTbody.innerHTML = '<tr><td colspan="3" style="text-align:center">ไม่มีข้อมูลสรุป</td></tr>';
+         userSelect.innerHTML = '<option>ไม่มีข้อมูล</option>';
+         calendarArea.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding: 20px;">ไม่มีบันทึกการทำงานในเดือนนี้</div>';
          return;
       }
 
-      let summaryData = {};
-
       logs.forEach(log => {
-        if(!summaryData[log.name]) summaryData[log.name] = { in: 0, out: 0 };
-        if(log.type === 'เข้างาน') summaryData[log.name].in++;
-        if(log.type === 'เลิกงาน') summaryData[log.name].out++;
+        let dateParts = log.date.split('/'); 
+        let dayNum = parseInt(dateParts[0], 10);
+        
+        if(!this.calendarData[log.name]) this.calendarData[log.name] = {};
+        if(!this.calendarData[log.name][dayNum]) {
+            this.calendarData[log.name][dayNum] = { in: false, out: false, timeIn: '-', timeOut: '-' };
+        }
+        
+        // บันทึกสถานะการเข้าออก และเก็บข้อมูลเวลาไว้ใช้ตอนคลิกด้วย
+        if(log.type === 'เข้างาน') {
+            this.calendarData[log.name][dayNum].in = true;
+            this.calendarData[log.name][dayNum].timeIn = this.formatThaiTime(log.time);
+        }
+        if(log.type === 'เลิกงาน') {
+            this.calendarData[log.name][dayNum].out = true;
+            this.calendarData[log.name][dayNum].timeOut = this.formatThaiTime(log.time);
+        }
 
         const tr = document.createElement('tr');
         const typeClass = log.type === 'เข้างาน' ? 'type-in' : (log.type === 'เลิกงาน' ? 'type-out' : '');
-        const mapLink = log.map ? `<a href="${log.map}" target="_blank" style="color:var(--primary)">📍 แผนที่</a>` : '-';
+        const mapLink = log.map && log.map !== '-' ? `<a href="${log.map}" target="_blank" style="color:var(--primary)">📍 แผนที่</a>` : '-';
         
         tr.innerHTML = `
-          <td>${log.date}</td>
-          <td>${log.time}</td>
+          <td>${this.formatThaiDate(log.date)}</td>
+          <td>${this.formatThaiTime(log.time)}</td>
           <td>${log.name}</td>
           <td class="${typeClass}">${log.type}</td>
           <td>${mapLink}</td>
@@ -719,18 +854,193 @@ const app = {
         tbody.appendChild(tr);
       });
 
-      for (const [name, counts] of Object.entries(summaryData)) {
+      Object.keys(this.calendarData).sort().forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        userSelect.appendChild(opt);
+      });
+
+      this.renderCalendar();
+
+    } catch(e) {
+      status.style.display = 'block';
+      status.innerHTML = `❌ เกิดข้อผิดพลาด: ${e.message} (เช็คว่าอัปเดต code.gs และ Deploy ใหม่หรือยัง)`;
+    }
+  },
+
+  renderCalendar() {
+    const area = document.getElementById('calendar-render-area');
+    const userSelect = document.getElementById('summary-user-select');
+    
+    // รีเซ็ตการแสดงรายละเอียดเวลาด้านล่าง
+    const detailDiv = document.getElementById('cal-day-detail');
+    if(detailDiv) detailDiv.style.display = 'none';
+    
+    if(!userSelect.value || !this.calendarData[userSelect.value]) {
+      area.innerHTML = '<div style="text-align:center; color:var(--text-muted);">ไม่มีข้อมูล</div>';
+      return;
+    }
+
+    const username = userSelect.value;
+    const userData = this.calendarData[username];
+    
+    const month = parseInt(document.getElementById('report-month').value, 10);
+    const year = parseInt(document.getElementById('report-year').value, 10);
+    
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const firstDayIndex = new Date(year, month - 1, 1).getDay(); 
+    
+    let html = `
+      <div class="calendar-header">
+        <div style="color: #fca5a5;">อา.</div>
+        <div>จ.</div><div>อ.</div><div>พ.</div><div>พฤ.</div><div>ศ.</div>
+        <div style="color: #a5b4fc;">ส.</div>
+      </div>
+      <div class="calendar-grid">
+    `;
+    
+    for(let i = 0; i < firstDayIndex; i++) {
+      html += `<div class="cal-day empty"></div>`;
+    }
+    
+    for(let d = 1; d <= daysInMonth; d++) {
+      let statusClass = 'absent';
+      let dayData = userData[d];
+      
+      if(dayData) {
+        if(dayData.in && dayData.out) {
+          statusClass = 'in-out'; 
+        } else if(dayData.in || dayData.out) {
+          statusClass = 'in-only'; 
+        }
+      }
+      
+      // เพิ่ม id และ onclick เพื่อเรียกฟังก์ชันแสดงเวลา
+      html += `<div class="cal-day ${statusClass}" id="cal-day-${d}" onclick="app.showDayDetail(${d})">${d}</div>`;
+    }
+    
+    html += `</div>
+      <div class="cal-legend">
+        <div class="legend-item"><div class="legend-dot dot-green"></div> เข้าและเลิกงาน</div>
+        <div class="legend-item"><div class="legend-dot dot-orange"></div> เข้าอย่างเดียว (ไม่ครบ)</div>
+        <div class="legend-item"><div class="legend-dot dot-gray"></div> ขาด/ไม่มีบันทึก</div>
+      </div>
+    `;
+    
+    area.innerHTML = html;
+  },
+
+  // ฟังก์ชันใหม่สำหรับคลิกดูรายละเอียดรายวันจากปฏิทิน
+  showDayDetail(day) {
+    const userSelect = document.getElementById('summary-user-select');
+    const username = userSelect.value;
+    const detailDiv = document.getElementById('cal-day-detail');
+    
+    if(!username || !this.calendarData[username]) return;
+
+    // ล้างกรอบสีขาวเก่า แล้วใส่กรอบที่วันที่ถูกคลิก (Highlight)
+    document.querySelectorAll('.cal-day').forEach(el => el.classList.remove('selected-day'));
+    const selectedEl = document.getElementById('cal-day-' + day);
+    if(selectedEl) selectedEl.classList.add('selected-day');
+
+    const data = this.calendarData[username][day];
+    
+    // เอาชื่อเดือนภาษาไทย และพ.ศ. จาก Dropdown มาแสดงผล
+    const monthSelect = document.getElementById('report-month');
+    const monthStr = monthSelect.options[monthSelect.selectedIndex].text;
+    const yearStr = parseInt(document.getElementById('report-year').value) + 543;
+    const fullDateStr = `วันที่ ${day} ${monthStr} ${yearStr}`;
+
+    if(!data) {
+      detailDiv.innerHTML = `
+        <div style="font-weight: 600; margin-bottom: 8px; color: #cbd5e1;">📅 ${fullDateStr}</div>
+        <div style="color: var(--text-muted); font-size: 0.9em; text-align: center; padding: 10px 0;">ไม่มีบันทึกการทำงานในระบบ</div>
+      `;
+    } else {
+      const inTimeStr = data.timeIn !== '-' ? data.timeIn : '<span style="color:var(--text-muted)">-</span>';
+      const outTimeStr = data.timeOut !== '-' ? data.timeOut : '<span style="color:var(--text-muted)">-</span>';
+      
+      detailDiv.innerHTML = `
+        <div style="font-weight: 600; margin-bottom: 12px; color: #a5b4fc; text-align: center;">📅 ${fullDateStr}</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.95em; text-align: center;">
+          <div style="background: rgba(16,185,129,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.2);">
+            <div style="color: var(--success); font-size: 0.85em; margin-bottom: 4px;">เข้างาน</div>
+            <div style="font-weight: 600;">${inTimeStr}</div>
+          </div>
+          <div style="background: rgba(245,158,11,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(245,158,11,0.2);">
+            <div style="color: var(--warning); font-size: 0.85em; margin-bottom: 4px;">เลิกงาน</div>
+            <div style="font-weight: 600;">${outTimeStr}</div>
+          </div>
+        </div>
+      `;
+    }
+    detailDiv.style.display = 'block';
+  },
+
+  async loadDailyReport() {
+    const tbody = document.getElementById('daily-tbody');
+    const status = document.getElementById('report-status');
+    const dateVal = document.getElementById('report-date').value;
+
+    if (!dateVal) return;
+
+    tbody.innerHTML = '';
+    status.style.display = 'block';
+    status.innerHTML = '<span class="loader"></span> กำลังดึงข้อมูล...';
+
+    if(!this.apiUrl) return status.innerHTML = '❌ ไม่มี API URL';
+
+    try {
+      const dObj = new Date(dateVal);
+      const month = dObj.getMonth() + 1;
+      const year = dObj.getFullYear();
+
+      const logs = await fetch(`${this.apiUrl}?action=getLogs&month=${month}&year=${year}`).then(r => r.json());
+      
+      if(logs.error) throw new Error(logs.error);
+      
+      status.style.display = 'none';
+      
+      const dailyLogs = Array.isArray(logs) ? logs.filter(l => {
+        if (!l.date) return false;
+        const parts = l.date.split('/');
+        if (parts.length === 3) {
+          return parseInt(parts[0], 10) === dObj.getDate() &&
+                 parseInt(parts[1], 10) === month &&
+                 parseInt(parts[2], 10) === year;
+        }
+        return false;
+      }) : [];
+
+      if(dailyLogs.length === 0) {
+         tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">ไม่มีผู้บันทึกเวลาในวันนี้</td></tr>';
+         return;
+      }
+
+      let summaryData = {};
+
+      dailyLogs.forEach(log => {
+        if(!summaryData[log.name]) summaryData[log.name] = { in: '-', out: '-' };
+        if(log.type === 'เข้างาน') summaryData[log.name].in = log.time;
+        if(log.type === 'เลิกงาน') summaryData[log.name].out = log.time;
+      });
+
+      for (const [name, times] of Object.entries(summaryData)) {
         const tr = document.createElement('tr');
+        const inClass = times.in !== '-' ? 'type-in' : '';
+        const outClass = times.out !== '-' ? 'type-out' : '';
         tr.innerHTML = `
           <td style="font-weight: 600;">${name}</td>
-          <td class="type-in">${counts.in} ครั้ง</td>
-          <td class="type-out">${counts.out} ครั้ง</td>
+          <td class="${inClass}">${this.formatThaiTime(times.in)}</td>
+          <td class="${outClass}">${this.formatThaiTime(times.out)}</td>
         `;
-        summaryTbody.appendChild(tr);
+        tbody.appendChild(tr);
       }
 
     } catch(e) {
-      status.innerHTML = `❌ Error: ${e.message}`;
+      status.style.display = 'block';
+      status.innerHTML = `❌ เกิดข้อผิดพลาด: ${e.message} (เช็คว่าอัปเดต code.gs และ Deploy ใหม่หรือยัง)`;
     }
   },
 
@@ -749,7 +1059,7 @@ const app = {
       this.currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       const video = document.getElementById('reg-video');
       video.srcObject = this.currentStream;
-      await video.play().catch(e=>console.log(e)); // Ensure video plays
+      await video.play().catch(e=>console.log(e)); 
       document.getElementById('reg-badge').innerText = '📸 กล้องพร้อมใช้งาน';
       document.getElementById('btn-save-face').disabled = false;
     } catch(e) {
@@ -817,7 +1127,6 @@ const app = {
       return;
     }
 
-    // 1. Check GPS
     try {
       sysStatus.innerText = '1/3 ตรวจสอบ GPS...';
       await this.checkGPS(gpsStatus);
@@ -826,24 +1135,21 @@ const app = {
       return; 
     }
 
-    // 1.5 เปิดกล้องให้พรีวิวภาพทันทีก่อนสแกนจริง
     try {
       sysStatus.innerText = 'กำลังเปิดกล้อง...';
       this.currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       const video = document.getElementById('scan-video');
       video.srcObject = this.currentStream;
-      await video.play().catch(e=>console.log(e)); // Ensure video plays
+      await video.play().catch(e=>console.log(e)); 
     } catch(e) {
       sysStatus.innerHTML = '<span style="color:var(--danger)">❌ เปิดกล้องไม่ได้ กรุณาอนุญาตให้สิทธิ์การใช้งานกล้อง</span>';
       return;
     }
 
-    // 2. Load AI
     sysStatus.innerText = '2/3 โหลดระบบ AI...';
     const aiOk = await this.loadAIModels('scan-badge');
     if(!aiOk) return;
 
-    // 3. Load DB
     sysStatus.innerText = '3/3 ดึงฐานข้อมูลพนักงาน...';
     try {
       const data = await fetch(this.apiUrl + '?action=getKnownFaces').then(r => r.json());
@@ -869,17 +1175,19 @@ const app = {
           const config = await fetch(this.apiUrl + '?action=getConfig').then(r => r.json());
           if (!config.lat || !config.lng || config.radius == 0) {
             statusEl.innerHTML = '📍 GPS: นอกพื้นที่/ไม่จำกัด';
-            return resolve(); // Pass
+            return resolve(); 
           }
           const dist = this.haversine(this.currentLat, this.currentLng, config.lat, config.lng);
           if (dist <= config.radius) {
-            statusEl.innerHTML = `📍 GPS: อยู่ในพื้นที่ (${dist.toFixed(3)} km)`;
+            statusEl.innerHTML = `📍 GPS: อยู่ในพื้นที่ (${Math.round(dist)} เมตร)`;
             resolve();
           } else {
-            reject(new Error(`คุณอยู่นอกพื้นที่ที่กำหนด (${dist.toFixed(2)}km / ${config.radius}km)`));
+            reject(new Error(`คุณอยู่นอกพื้นที่ที่กำหนด (${Math.round(dist)} ม. / ${config.radius} ม.)`));
           }
         } catch(e) { reject(new Error('ตรวจสอบ GPS ล้มเหลว API Error')); }
-      }, err => reject(new Error('กรุณาเปิด GPS (Location)')));
+      }, err => reject(new Error('กรุณาเปิด GPS (Location)')),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 } // เพิ่มความแม่นยำสูง
+      );
     });
   },
 
@@ -890,10 +1198,8 @@ const app = {
     document.getElementById('scan-line').style.display = 'block';
 
     const video = document.getElementById('scan-video');
-    // เพื่อความมั่นใจว่าวิดีโอถูกเล่นแล้ว
     await video.play().catch(e=>console.log(e)); 
 
-    // Start Loop
     this.scanInterval = setInterval(async () => {
       if(video.paused || video.ended) return;
       const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
@@ -915,10 +1221,38 @@ const app = {
     }, 500);
   },
 
-  showConfirmModal(name, distance) {
+  async checkTodayStatus(name) {
+    try {
+      // ดึงวันที่ปัจจุบัน (อ้างอิง TimeZone ประเทศไทย)
+      const bkkDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Bangkok"}));
+      const dd = String(bkkDate.getDate()).padStart(2, '0');
+      const mm = String(bkkDate.getMonth() + 1).padStart(2, '0');
+      const yyyy = bkkDate.getFullYear();
+      const todayStr = `${dd}/${mm}/${yyyy}`; // รูปแบบตรงกับที่ Google Sheets บันทึก
+
+      // ดึง log ของเดือนปัจจุบันมาเช็ค
+      const logs = await fetch(`${this.apiUrl}?action=getLogs&month=${parseInt(mm)}&year=${yyyy}`).then(r => r.json());
+      
+      let hasIn = false;
+      let hasOut = false;
+
+      if (Array.isArray(logs)) {
+        logs.forEach(log => {
+          if (log.name === name && log.date === todayStr) {
+            if (log.type === 'เข้างาน') hasIn = true;
+            if (log.type === 'เลิกงาน') hasOut = true;
+          }
+        });
+      }
+      return { hasIn, hasOut };
+    } catch(e) {
+      console.error('Check status error:', e);
+      return { hasIn: false, hasOut: false };
+    }
+  },
+
+  async showConfirmModal(name, distance) {
     document.getElementById('scan-line').style.display = 'none';
-    
-    // หยุดภาพนิ่ง (Freeze) เพื่อให้ผู้ใช้งานมองเห็นจังหวะที่สแกนติด
     document.getElementById('scan-video').pause();
 
     this.matchedName = name;
@@ -926,13 +1260,45 @@ const app = {
     const accuracy = ((1 - distance) * 100).toFixed(1);
     document.getElementById('modal-score').innerText = `${accuracy}%`;
     document.getElementById('scan-modal').style.display = 'flex';
+
+    const btnIn = document.getElementById('btn-clock-in');
+    const btnOut = document.getElementById('btn-clock-out');
+    
+    // ตั้งสถานะให้โหลดดิ้งตอนเช็คข้อมูลจาก Sheets
+    btnIn.disabled = true; btnOut.disabled = true;
+    btnIn.innerHTML = '<span class="loader"></span> ตรวจสอบสิทธิ์...';
+    btnOut.innerHTML = '<span class="loader"></span> ตรวจสอบสิทธิ์...';
+    btnIn.style.opacity = '1'; btnOut.style.opacity = '1';
+
+    // เช็คสิทธิ์วันปัจจุบัน
+    const status = await this.checkTodayStatus(name);
+
+    if (status.hasIn) {
+      btnIn.innerHTML = '✅ เข้างานแล้ว';
+      btnIn.disabled = true;
+      btnIn.style.opacity = '0.5';
+    } else {
+      btnIn.innerHTML = '🟢 บันทึกเข้างาน';
+      btnIn.disabled = false;
+    }
+
+    if (status.hasOut) {
+      btnOut.innerHTML = '✅ เลิกงานแล้ว';
+      btnOut.disabled = true;
+      btnOut.style.opacity = '0.5';
+    } else {
+      btnOut.innerHTML = '🔴 บันทึกเลิกงาน';
+      btnOut.disabled = false;
+    }
+
+    if (status.hasIn && status.hasOut) {
+      document.getElementById('modal-score').innerText = `${accuracy}% (บันทึกครบแล้วสำหรับวันนี้)`;
+    }
   },
 
   closeModal() {
     document.getElementById('scan-modal').style.display = 'none';
     this.matchedName = null;
-    
-    // เล่นภาพต่อถ้าผู้ใช้งานกด 'ไม่ใช่ฉัน' แล้วต้องการสแกนใหม่
     document.getElementById('scan-video').play().catch(e=>console.log(e));
     
     document.getElementById('scan-badge').innerText = 'กล้องพร้อม แตะเพื่อเริ่มสแกน';
@@ -957,21 +1323,19 @@ const app = {
       this.navigate('view-home');
     } catch(e) {
       alert(`❌ บันทึกล้มเหลว: ${e.message}`);
+      this.closeModal(); // รีเซ็ตเพื่อป้องกันบัคค้าง ให้สแกนใหม่
     }
-    
-    btnIn.disabled = false; btnOut.disabled = false;
-    btnIn.innerHTML = '🟢 บันทึกเข้างาน'; btnOut.innerHTML = '🔴 บันทึกเลิกงาน';
   },
 
-  // Utils
   haversine(lat1, lon1, lat2, lon2) {
-    const R = 6371; const dLat = (lat2-lat1)*Math.PI/180; const dLon = (lon2-lon1)*Math.PI/180;
+    const R = 6371000; // เปลี่ยนรัศมีโลกเป็นหน่วย เมตร (จากเดิม 6371 km)
+    const dLat = (lat2-lat1)*Math.PI/180; 
+    const dLon = (lon2-lon1)*Math.PI/180;
     const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   }
 };
 
-// Initialize
 window.onload = () => app.init();
 </script>
 </body>
