@@ -693,6 +693,9 @@
           <button class="btn btn-outline" id="btn-tab-detail" onclick="app.switchReportTab('detail')" style="padding: 12px; font-size: 0.95em; background: var(--primary); border-color: var(--primary); color: white;">
             <i data-lucide="list" style="width: 18px; height: 18px; margin-right: 6px;"></i> รายละเอียด
           </button>
+          <button class="btn btn-outline" id="btn-tab-employee" onclick="app.switchReportTab('employee')" style="padding: 12px; font-size: 0.95em;">
+            <i data-lucide="users" style="width: 18px; height: 18px; margin-right: 6px;"></i> ข้อมูลพนักงาน
+          </button>
         </div>
       </div>
 
@@ -747,6 +750,22 @@
             </tr>
           </thead>
           <tbody id="daily-tbody">
+            <!-- Data will be injected here -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ตารางข้อมูลพนักงาน -->
+      <div class="table-container" id="table-employee-container" style="display: none;">
+        <table id="employee-table">
+          <thead>
+            <tr>
+              <th>รูปถ่าย</th>
+              <th>ชื่อพนักงาน</th>
+              <th>วัน-เวลาที่ลงทะเบียน</th>
+            </tr>
+          </thead>
+          <tbody id="employee-tbody">
             <!-- Data will be injected here -->
           </tbody>
         </table>
@@ -969,7 +988,7 @@ const app = {
 
   // --- 3. Report View ---
   switchReportTab(tab) {
-    const tabs = ['detail', 'summary', 'daily'];
+    const tabs = ['detail', 'summary', 'daily', 'employee'];
     tabs.forEach(t => {
       const btn = document.getElementById('btn-tab-' + t);
       const container = document.getElementById('table-' + t + '-container');
@@ -999,6 +1018,10 @@ const app = {
         dateEl.value = `${yyyy}-${mm}-${dd}`;
       }
       this.loadDailyReport();
+    } else if (tab === 'employee') {
+      document.getElementById('filter-monthly').style.display = 'none';
+      document.getElementById('filter-daily').style.display = 'none';
+      this.loadEmployeeData();
     } else {
       document.getElementById('filter-monthly').style.display = 'flex';
       document.getElementById('filter-daily').style.display = 'none';
@@ -1007,6 +1030,78 @@ const app = {
       if (tbody.innerHTML.trim() === '') {
         this.loadReportData();
       }
+    }
+  },
+
+  async loadEmployeeData() {
+    const tbody = document.getElementById('employee-tbody');
+    const status = document.getElementById('report-status');
+
+    tbody.innerHTML = '';
+    status.style.display = 'block';
+    this.setHtmlAndIcons('report-status', '<i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 24px; height: 24px;"></i> กำลังดึงข้อมูลพนักงาน...');
+
+    if(!this.apiUrl) return this.setHtmlAndIcons('report-status', '<span style="color:var(--danger)">ไม่มี API URL</span>');
+
+    try {
+      const employees = await fetch(`${this.apiUrl}?action=getEmployeeDetails`).then(r => r.json());
+      
+      if(employees.error) throw new Error(employees.error);
+      
+      status.style.display = 'none';
+      
+      if(!Array.isArray(employees) || employees.length === 0) {
+         tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-muted); padding: 30px;">ไม่มีข้อมูลพนักงานในระบบ</td></tr>';
+         return;
+      }
+
+      // ระบบบันทึกคนละ 3 มุม เลยรวมให้แสดงคนละ 1 รายการ
+      const uniqueEmployees = {};
+      employees.forEach(emp => {
+        if (!uniqueEmployees[emp.name]) {
+          uniqueEmployees[emp.name] = emp;
+        } else if (emp.photo && !uniqueEmployees[emp.name].photo) {
+          uniqueEmployees[emp.name].photo = emp.photo;
+        }
+      });
+
+      Object.values(uniqueEmployees).forEach(emp => {
+        const tr = document.createElement('tr');
+        
+        // รูปถ่ายพนักงาน (ถ้าไม่มีให้แสดงไอคอนแทน)
+        let photoHtml = '<div style="width: 56px; height: 56px; background: #e2e8f0; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #94a3b8;"><i data-lucide="user" style="width: 24px; height: 24px;"></i></div>';
+        if (emp.photo) {
+          photoHtml = `<img src="${emp.photo}" style="width: 56px; height: 56px; object-fit: cover; border-radius: 14px; border: 2px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">`;
+        }
+
+        // จัด Format วันและเวลาให้แสดงแยกบรรทัดสวยงาม
+        let regDate = '-';
+        let regTime = '';
+        if (emp.registeredAt !== '-') {
+          const parts = emp.registeredAt.split(' ');
+          if (parts.length >= 2) {
+            regDate = this.formatThaiDate(parts[0]);
+            regTime = parts[1] + ' น.';
+          } else {
+            regDate = this.formatThaiDate(emp.registeredAt);
+          }
+        }
+
+        tr.innerHTML = `
+          <td style="padding: 12px 20px; width: 80px;">${photoHtml}</td>
+          <td style="font-weight: 600; color: #1e293b; font-size: 1.1em; vertical-align: middle;">${emp.name}</td>
+          <td style="vertical-align: middle;">
+            <div style="font-weight: 500; color: #334155;"><i data-lucide="calendar" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i> ${regDate}</div>
+            <div style="font-size: 0.9em; color: var(--text-muted); margin-top: 4px;"><i data-lucide="clock" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i> ${regTime}</div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons({ root: tbody });
+
+    } catch(e) {
+      status.style.display = 'block';
+      this.setHtmlAndIcons('report-status', `<span style="color:var(--danger); display: flex; align-items: center; justify-content: center; gap: 8px;"><i data-lucide="alert-circle"></i> เกิดข้อผิดพลาด: ${e.message}</span>`);
     }
   },
 
@@ -1343,10 +1438,26 @@ const app = {
       return;
     }
 
+    // แคปเจอร์รูปถ่ายพนักงาน (ทำเฉพาะสแกนครั้งที่ 1 เพื่อประหยัดพื้นที่ Database)
+    let photoBase64 = '';
+    if (this.regCounter === 0) {
+      const canvas = document.createElement('canvas');
+      const scale = 150 / Math.max(video.videoWidth, video.videoHeight); // ลดขนาดเหลือประมาณ 150px (ภาพจะไม่หนักและโหลดเร็ว)
+      canvas.width = video.videoWidth * scale;
+      canvas.height = video.videoHeight * scale;
+      const ctx = canvas.getContext('2d');
+      // พลิกรูปภาพให้ถูกด้าน (ไม่สลับซ้ายขวาแบบกระจก)
+      ctx.translate(canvas.width, 0); 
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      photoBase64 = canvas.toDataURL('image/jpeg', 0.6); // บีบอัดเป็น JPEG ที่ 60%
+    }
+
     try {
       await fetch(this.apiUrl, {
         method: 'POST',
-        body: JSON.stringify({ action: 'registerUser', name, faceDescriptor: Array.from(detection.descriptor) })
+        // ส่งข้อมูล photoBase64 ไปด้วย
+        body: JSON.stringify({ action: 'registerUser', name, faceDescriptor: Array.from(detection.descriptor), photo: photoBase64 })
       });
       
       this.regCounter++;
