@@ -5,25 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ระบบบันทึกเวลาเข้างาน</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- โหลด Library สำหรับจดจำใบหน้า และ ชุด Icon ที่สวยงาม -->
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
   <style>
     /* ==========================================================================
-       CSS VARIABLES & GLOBAL RESET
+       CSS VARIABLES & GLOBAL RESET (LIGHT THEME)
        ========================================================================== */
     :root {
-      --bg-main: #0b0f19;
-      --bg-card: rgba(255, 255, 255, 0.04);
-      --bg-card-hover: rgba(255, 255, 255, 0.08);
-      --border-color: rgba(255, 255, 255, 0.1);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --primary: #6366f1;
-      --primary-hover: #4f46e5;
-      --success: #10b981;
+      --bg-main: #f8fafc;          /* พื้นหลังหลัก (Slate 50) */
+      --bg-card: rgba(255, 255, 255, 0.85); /* การ์ดกระจกใส */
+      --bg-card-hover: rgba(255, 255, 255, 1);
+      --border-color: rgba(203, 213, 225, 0.8);
+      --text-main: #0f172a;        /* สีตัวอักษรหลัก (Slate 900) */
+      --text-muted: #64748b;       /* สีตัวอักษรรอง (Slate 500) */
+      --primary: #4f46e5;          /* สีหลัก (Indigo 600) */
+      --primary-hover: #4338ca;
+      --success: #10b981;          /* สีเขียว */
       --success-hover: #059669;
-      --danger: #ef4444;
+      --danger: #ef4444;           /* สีแดง */
       --danger-hover: #dc2626;
-      --warning: #f59e0b;
+      --warning: #f59e0b;          /* สีส้ม */
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,8 +35,9 @@
       font-family: 'Sarabun', sans-serif;
       background-color: var(--bg-main);
       background-image: 
-        radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
-        radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.1), transparent 25%);
+        radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 40%),
+        radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.05), transparent 40%);
+      background-attachment: fixed;
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
@@ -43,6 +47,7 @@
       padding: 0 16px;
     }
 
+    /* Base Container (Mobile First) */
     .app-container {
       width: 100%;
       max-width: 500px;
@@ -52,186 +57,271 @@
     }
 
     /* ==========================================================================
+       RESPONSIVE DESKTOP LAYOUT (อัปเกรดให้รองรับจอคอมพิวเตอร์เต็มจอ)
+       ========================================================================== */
+    .center-widget { width: 100%; }
+    .report-widget { width: 100%; }
+    .config-grid   { display: block; }
+    .tabs-wrapper  { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .tabs-row      { display: flex; gap: 8px; }
+    .split-desktop { display: block; }
+    .side-panel    { display: flex; flex-direction: column; gap: 16px; }
+
+    @media (min-width: 768px) {
+      .app-container {
+        max-width: 1200px; /* ขยายกว้างสุดสำหรับ Desktop */
+        padding: 50px 32px 100px;
+      }
+      .header { margin-bottom: 48px !important; }
+      .header-icon-svg { width: 84px !important; height: 84px !important; margin-bottom: 16px !important; }
+      .title { font-size: 2.6em !important; letter-spacing: -0.5px; }
+      .subtitle { font-size: 1.15em !important; }
+      
+      /* Grid Layout สำหรับเมนู */
+      .menu-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 32px !important;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .menu-card { padding: 32px !important; border-radius: 24px !important; }
+      .menu-icon { width: 64px !important; height: 64px !important; font-size: 32px !important; }
+      .menu-title { font-size: 1.4em !important; }
+      .menu-desc { font-size: 1em !important; }
+      
+      /* Split Layout (แบ่งซ้าย-ขวา สำหรับหน้าสแกนและลงทะเบียน) */
+      .split-desktop {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 40px;
+        align-items: stretch;
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      .side-panel {
+        justify-content: center;
+        height: 100%;
+      }
+      .side-panel .card-panel { flex: 1; display: flex; flex-direction: column; justify-content: center; margin-bottom: 0 !important; }
+      .split-desktop .video-container {
+        margin-bottom: 0 !important;
+        min-height: 450px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      /* การตั้งค่าแบ่งเป็น 2 คอลัมน์ซ้ายขวา */
+      .config-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        align-items: stretch;
+      }
+      .config-grid .card-panel { margin-bottom: 0; }
+      
+      /* Tab รายงานจัดเรียงแนวนอน */
+      .tabs-wrapper { flex-direction: row; }
+      .tabs-row { flex: 1; }
+      
+      /* ปฏิทินไม่ให้กว้างเกินไปบนจอใหญ่ */
+      .calendar-wrapper { max-width: 800px; margin: 0 auto; padding: 32px !important; }
+      .cal-day { font-size: 1.3em !important; }
+      
+      /* ตารางกว้างขึ้น อ่านง่าย */
+      .table-container { box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important; border-radius: 16px !important; }
+      th, td { padding: 20px 24px !important; font-size: 1.05em !important; }
+    }
+
+    /* ==========================================================================
        VIEW MANAGEMENT (SPA)
        ========================================================================== */
     .view {
       display: none;
       animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .view.active {
-      display: block;
-    }
+    .view.active { display: block; }
 
     /* ==========================================================================
        COMPONENTS
        ========================================================================== */
     /* Header & Nav */
-    .header {
-      text-align: center;
-      margin-bottom: 32px;
-      position: relative;
+    .header { text-align: center; margin-bottom: 32px; position: relative; }
+    
+    /* Custom SVG Logo อาคารสำนักงานทางการ */
+    .header-icon-svg {
+      width: 60px; height: 60px; 
+      margin-bottom: 12px; display: inline-block;
+      filter: drop-shadow(0 8px 16px rgba(79, 70, 229, 0.25));
     }
-    .header-icon {
-      font-size: 48px;
-      margin-bottom: 8px;
-      display: inline-block;
-      filter: drop-shadow(0 0 15px rgba(99,102,241,0.5));
-    }
+
     .title {
-      font-size: 1.8em;
-      font-weight: 700;
-      background: linear-gradient(135deg, #fff, #a5b4fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 4px;
+      font-size: 1.9em; font-weight: 700; color: #1e3a8a;
+      background: linear-gradient(135deg, #1e40af, #4f46e5);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
     }
-    .subtitle { color: var(--text-muted); font-size: 0.9em; }
+    .subtitle { color: var(--text-muted); font-size: 0.95em; font-weight: 500; }
 
     .top-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 24px;
     }
     .btn-back {
       display: inline-flex; align-items: center; gap: 6px;
       background: var(--bg-card); border: 1px solid var(--border-color);
       color: var(--text-muted); padding: 8px 16px; border-radius: 20px;
-      font-size: 0.9em; text-decoration: none; cursor: pointer;
-      transition: all 0.2s;
+      font-size: 0.95em; font-weight: 500; text-decoration: none; cursor: pointer;
+      transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     }
     .btn-back:hover { background: var(--bg-card-hover); color: var(--text-main); }
-    .nav-title { font-weight: 600; font-size: 1.1em; color: #c7d2fe; }
+    .nav-title { font-weight: 600; font-size: 1.15em; color: #334155; }
 
-    /* Admin Trigger */
     .admin-trigger {
       position: absolute; top: 0; right: 0;
-      background: transparent; border: none; color: var(--text-muted);
-      font-size: 20px; cursor: pointer; opacity: 0.5; transition: opacity 0.3s;
+      background: transparent; border: none; color: #94a3b8;
+      cursor: pointer; opacity: 0.6; transition: all 0.3s;
+      padding: 8px; border-radius: 50%;
     }
-    .admin-trigger:hover { opacity: 1; }
+    .admin-trigger:hover { opacity: 1; color: var(--primary); background: rgba(79,70,229,0.1); }
 
     /* Buttons */
     .btn {
       width: 100%; border: none; border-radius: 16px; padding: 16px;
       font-family: inherit; font-size: 16px; font-weight: 600;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
       transition: all 0.3s; color: white;
     }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
-    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); box-shadow: 0 4px 15px rgba(99,102,241,0.3); }
-    .btn-success { background: linear-gradient(135deg, var(--success), var(--success-hover)); box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
-    .btn-danger  { background: linear-gradient(135deg, var(--danger), var(--danger-hover)); box-shadow: 0 4px 15px rgba(239,68,68,0.3); }
-    .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
-    .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); box-shadow: 0 4px 12px rgba(79,70,229,0.25); }
+    .btn-success { background: linear-gradient(135deg, var(--success), var(--success-hover)); box-shadow: 0 4px 12px rgba(16,185,129,0.25); }
+    .btn-danger  { background: linear-gradient(135deg, var(--danger), var(--danger-hover)); box-shadow: 0 4px 12px rgba(239,68,68,0.25); }
+    .btn-outline { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
 
     /* Main Menu Cards */
     .menu-grid { display: flex; flex-direction: column; gap: 16px; }
     .menu-card {
       background: var(--bg-card); border: 1px solid var(--border-color);
       border-radius: 20px; padding: 24px; display: flex; align-items: center; gap: 20px;
-      cursor: pointer; transition: all 0.3s; backdrop-filter: blur(10px);
+      cursor: pointer; transition: all 0.3s; backdrop-filter: blur(12px);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
     }
-    .menu-card:hover { background: var(--bg-card-hover); transform: translateY(-3px); border-color: rgba(99,102,241,0.3); }
+    .menu-card:hover { 
+      background: var(--bg-card-hover); transform: translateY(-4px); 
+      border-color: rgba(99,102,241,0.4); box-shadow: 0 12px 24px -4px rgba(79,70,229,0.15); 
+    }
     .menu-icon {
-      width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px;
+      width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
     }
-    .icon-scan { background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.2)); color: #34d399; }
-    .icon-reg { background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(79,70,229,0.2)); color: #a5b4fc; }
-    .menu-info flex { flex: 1; }
-    .menu-title { font-size: 1.2em; font-weight: 600; margin-bottom: 4px; }
-    .menu-desc { font-size: 0.85em; color: var(--text-muted); }
+    .icon-scan { background: rgba(16,185,129,0.15); color: #059669; }
+    .icon-reg { background: rgba(99,102,241,0.15); color: #4338ca; }
+    .icon-report { background: rgba(245,158,11,0.15); color: #d97706; }
+    .icon-config { background: rgba(100,116,139,0.15); color: #475569; }
+    .menu-info { flex: 1; }
+    .menu-title { font-size: 1.25em; font-weight: 700; margin-bottom: 4px; color: #1e293b; }
+    .menu-desc { font-size: 0.9em; color: var(--text-muted); }
 
     /* Forms & Inputs */
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+    .form-group { margin-bottom: 16px; text-align: left; }
+    .form-group label { display: block; font-size: 0.9em; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
     .form-control {
-      width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.2);
-      border: 1px solid var(--border-color); border-radius: 12px;
+      width: 100%; padding: 14px 16px; background: #ffffff;
+      border: 1px solid #cbd5e1; border-radius: 12px;
       color: var(--text-main); font-family: inherit; font-size: 15px; outline: none; transition: 0.3s;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
     }
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
-    .card-panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 24px; margin-bottom: 20px; }
+    .card-panel { 
+      background: var(--bg-card); border: 1px solid var(--border-color); 
+      border-radius: 20px; padding: 24px; margin-bottom: 24px; backdrop-filter: blur(12px);
+      box-shadow: 0 4px 12px -2px rgba(0,0,0,0.03);
+    }
 
     /* Video Scanner */
     .video-container {
       position: relative; width: 100%; border-radius: 24px; overflow: hidden;
-      background: #000; min-height: 300px; border: 2px solid var(--border-color); margin-bottom: 20px;
+      background: #e2e8f0; min-height: 300px; border: 4px solid #ffffff; margin-bottom: 20px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
     }
     video { width: 100%; height: auto; display: block; transform: scaleX(-1); object-fit: cover; }
     .scan-overlay {
       position: absolute; inset: 0; pointer-events: none; z-index: 5;
-      background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.6) 100%);
+      background: radial-gradient(circle at center, transparent 40%, rgba(255,255,255,0.4) 100%);
     }
     .scan-line {
-      position: absolute; left: 10%; right: 10%; height: 2px;
-      background: var(--success); box-shadow: 0 0 10px var(--success);
-      animation: scanAnim 2s linear infinite; display: none;
+      position: absolute; left: 10%; right: 10%; height: 3px;
+      background: var(--success); box-shadow: 0 0 12px var(--success);
+      animation: scanAnim 2s linear infinite; display: none; border-radius: 2px;
     }
     .status-badge {
       position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); padding: 6px 16px;
-      border-radius: 20px; font-size: 0.85em; border: 1px solid var(--border-color); z-index: 10;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(4px); padding: 8px 18px;
+      border-radius: 20px; font-size: 0.9em; border: 1px solid var(--border-color); z-index: 10;
+      color: var(--text-main); font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      display: flex; align-items: center; gap: 6px; white-space: nowrap;
     }
 
     /* Modals */
     .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(6px);
       display: none; align-items: center; justify-content: center; z-index: 100;
     }
     .modal {
-      background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 24px;
-      width: 90%; max-width: 380px; padding: 30px 24px; text-align: center;
-      animation: slideUp 0.3s ease; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      background: #ffffff; border: 1px solid var(--border-color); border-radius: 24px;
+      width: 90%; max-width: 400px; padding: 32px 24px; text-align: center;
+      animation: slideUp 0.3s ease; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
     }
-    .modal-icon { font-size: 50px; margin-bottom: 10px; }
-    .modal-name { font-size: 1.5em; font-weight: 700; color: #a5b4fc; margin-bottom: 20px; }
-    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .modal-icon { width: 72px; height: 72px; color: var(--primary); margin: 0 auto 16px; background: rgba(79,70,229,0.1); padding: 14px; border-radius: 50%; }
+    .modal-name { font-size: 1.6em; font-weight: 700; color: #1e3a8a; margin-bottom: 24px; }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
 
     /* Tables */
-    .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9em; }
-    th, td { padding: 12px 16px; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
-    th { background: rgba(255,255,255,0.05); color: var(--text-muted); font-weight: 600; }
+    .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border-color); background: #ffffff; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95em; }
+    th, td { padding: 16px 20px; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+    th { background: #f8fafc; color: var(--text-muted); font-weight: 700; border-bottom: 2px solid #e2e8f0; }
     tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
     .type-in { color: var(--success); font-weight: 600; }
     .type-out { color: var(--warning); font-weight: 600; }
 
     /* Calendar Styles */
-    .calendar-wrapper { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 16px; border: 1px solid var(--border-color); }
-    .calendar-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; font-size: 0.9em; }
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-    
-    /* แก้ไขปฏิทินให้กดได้ */
+    .calendar-wrapper { background: #ffffff; border-radius: 16px; padding: 24px 16px; border: 1px solid var(--border-color); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+    .calendar-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; font-size: 0.95em; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
     .cal-day { 
       aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-      border-radius: 8px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); 
+      border-radius: 12px; background: #f8fafc; border: 1px solid var(--border-color); 
       font-size: 1.1em; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
-      cursor: pointer;
+      cursor: pointer; font-weight: 600; color: var(--text-main);
     }
-    .cal-day:not(.empty):hover { transform: scale(1.15); z-index: 2; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .cal-day:not(.empty):hover { transform: scale(1.1); z-index: 2; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-color: #cbd5e1; }
     .cal-day.empty { background: transparent; border: none; cursor: default; }
-    .cal-day.in-out { background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.5); color: #34d399; font-weight: bold; box-shadow: inset 0 0 10px rgba(16,185,129,0.1); }
-    .cal-day.in-only { background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.5); color: #fbbf24; font-weight: bold; box-shadow: inset 0 0 10px rgba(245,158,11,0.1); }
-    .cal-day.absent { color: var(--text-muted); }
-    .cal-day.selected-day { border: 2px solid #fff; transform: scale(1.15); z-index: 3; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+    .cal-day.in-out { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.5); color: #059669; }
+    .cal-day.in-only { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.5); color: #d97706; }
+    .cal-day.absent { color: #94a3b8; font-weight: 400; }
+    .cal-day.selected-day { border: 2px solid var(--primary); transform: scale(1.1); z-index: 3; box-shadow: 0 4px 15px rgba(79,70,229,0.25); background: #ffffff; color: var(--primary); }
 
-    .cal-legend { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 16px; font-size: 0.85em; }
-    .legend-item { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
-    .legend-dot { width: 12px; height: 12px; border-radius: 4px; }
-    .dot-green { background: rgba(16, 185, 129, 0.5); border: 1px solid #10b981; }
-    .dot-orange { background: rgba(245, 158, 11, 0.5); border: 1px solid #f59e0b; }
-    .dot-gray { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); }
+    .cal-legend { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin-top: 24px; font-size: 0.9em; }
+    .legend-item { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-weight: 500; }
+    .legend-dot { width: 14px; height: 14px; border-radius: 4px; }
+    .dot-green { background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; }
+    .dot-orange { background: rgba(245, 158, 11, 0.25); border: 1px solid #f59e0b; }
+    .dot-gray { background: #f8fafc; border: 1px solid var(--border-color); }
 
     /* Alerts & Loading */
-    .alert { padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9em; display: none; }
-    .alert-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #fbbf24; }
-    .alert-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .alert { padding: 16px 20px; border-radius: 12px; margin-bottom: 24px; font-size: 0.95em; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+    .alert-warning { background: #fef3c7; border: 1px solid #fde68a; color: #b45309; }
+    .alert-error { background: #fee2e2; border: 1px solid #fecaca; color: #b91c1c; }
     
     .loader {
-      display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3);
+      display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.4);
       border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite;
     }
+    .loader-dark { border-color: rgba(0,0,0,0.1); border-top-color: var(--primary); }
 
     /* Animations */
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -249,31 +339,106 @@
        ========================================================= -->
   <div id="view-home" class="view active">
     <div class="header">
-      <div class="header-icon">🏢</div>
+      <!-- Custom SVG Icon รูปทรงอาคารสำนักงานราชการ ตามภาพอ้างอิง -->
+      <svg viewBox="0 0 100 100" class="header-icon-svg">
+        <defs>
+          <linearGradient id="govGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1e3a8a" />
+            <stop offset="100%" stop-color="#4f46e5" />
+          </linearGradient>
+        </defs>
+        
+        <!-- โครงสร้างตึกหลัก -->
+        <path d="M22 5 h56 v40 h17 v50 h-90 v-50 h17 z" fill="url(#govGradient)" />
+
+        <!-- ส่วนเจาะทะลุ (หน้าต่างและประตู) -->
+        <g fill="var(--bg-main)">
+          <!-- หน้าต่างตึกสูงส่วนกลาง (4 แถว x 4 คอลัมน์) -->
+          <rect x="28" y="12" width="8" height="6" rx="0.5" />
+          <rect x="40" y="12" width="8" height="6" rx="0.5" />
+          <rect x="52" y="12" width="8" height="6" rx="0.5" />
+          <rect x="64" y="12" width="8" height="6" rx="0.5" />
+
+          <rect x="28" y="21" width="8" height="6" rx="0.5" />
+          <rect x="40" y="21" width="8" height="6" rx="0.5" />
+          <rect x="52" y="21" width="8" height="6" rx="0.5" />
+          <rect x="64" y="21" width="8" height="6" rx="0.5" />
+
+          <rect x="28" y="30" width="8" height="6" rx="0.5" />
+          <rect x="40" y="30" width="8" height="6" rx="0.5" />
+          <rect x="52" y="30" width="8" height="6" rx="0.5" />
+          <rect x="64" y="30" width="8" height="6" rx="0.5" />
+
+          <rect x="28" y="39" width="8" height="6" rx="0.5" />
+          <rect x="40" y="39" width="8" height="6" rx="0.5" />
+          <rect x="52" y="39" width="8" height="6" rx="0.5" />
+          <rect x="64" y="39" width="8" height="6" rx="0.5" />
+
+          <!-- หน้าต่างฐานตึกชั้นล่าง (3 แถว x 8 คอลัมน์) -->
+          <rect x="10" y="52" width="8" height="6" rx="0.5" />
+          <rect x="20" y="52" width="8" height="6" rx="0.5" />
+          <rect x="30" y="52" width="8" height="6" rx="0.5" />
+          <rect x="40" y="52" width="8" height="6" rx="0.5" />
+          <rect x="52" y="52" width="8" height="6" rx="0.5" />
+          <rect x="62" y="52" width="8" height="6" rx="0.5" />
+          <rect x="72" y="52" width="8" height="6" rx="0.5" />
+          <rect x="82" y="52" width="8" height="6" rx="0.5" />
+
+          <rect x="10" y="62" width="8" height="6" rx="0.5" />
+          <rect x="20" y="62" width="8" height="6" rx="0.5" />
+          <rect x="30" y="62" width="8" height="6" rx="0.5" />
+          <rect x="40" y="62" width="8" height="6" rx="0.5" />
+          <rect x="52" y="62" width="8" height="6" rx="0.5" />
+          <rect x="62" y="62" width="8" height="6" rx="0.5" />
+          <rect x="72" y="62" width="8" height="6" rx="0.5" />
+          <rect x="82" y="62" width="8" height="6" rx="0.5" />
+
+          <rect x="10" y="72" width="8" height="6" rx="0.5" />
+          <rect x="20" y="72" width="8" height="6" rx="0.5" />
+          <rect x="30" y="72" width="8" height="6" rx="0.5" />
+          <rect x="40" y="72" width="8" height="6" rx="0.5" />
+          <rect x="52" y="72" width="8" height="6" rx="0.5" />
+          <rect x="62" y="72" width="8" height="6" rx="0.5" />
+          <rect x="72" y="72" width="8" height="6" rx="0.5" />
+          <rect x="82" y="72" width="8" height="6" rx="0.5" />
+
+          <!-- ประตูทางเข้าหลักและทางเดินเสาด้านข้าง -->
+          <rect x="36" y="84" width="28" height="12" rx="1" />
+          <rect x="12" y="84" width="8" height="12" rx="0.5" />
+          <rect x="24" y="84" width="8" height="12" rx="0.5" />
+          <rect x="68" y="84" width="8" height="12" rx="0.5" />
+          <rect x="80" y="84" width="8" height="12" rx="0.5" />
+        </g>
+      </svg>
       <h1 class="title">บันทึกเวลาทำงาน</h1>
       <p class="subtitle">ระบบจดจำใบหน้าและตำแหน่ง GPS</p>
-      <button class="admin-trigger" onclick="app.showAdminLogin()">🔒</button>
+      <button class="admin-trigger" onclick="app.showAdminLogin()" title="ตั้งค่าสำหรับผู้ดูแลระบบ">
+        <i data-lucide="settings"></i>
+      </button>
     </div>
 
-    <div id="home-alert" class="alert alert-warning">
-      ⚠️ ยังไม่ได้ตั้งค่า API URL (ติดต่อ Admin)
+    <div id="home-alert" class="alert alert-warning center-widget" style="display: none; max-width: 600px; margin-left: auto; margin-right: auto;">
+      <i data-lucide="alert-triangle" style="width: 24px; height: 24px;"></i>
+      ยังไม่ได้ตั้งค่า API URL (ติดต่อ Admin)
     </div>
 
     <div class="menu-grid">
       <div class="menu-card" onclick="app.navigate('view-scan')">
-        <div class="menu-icon icon-scan">📷</div>
+        <div class="menu-icon icon-scan"><i data-lucide="scan-face" style="width: 32px; height: 32px;"></i></div>
         <div class="menu-info">
           <div class="menu-title">สแกนใบหน้า</div>
           <div class="menu-desc">บันทึกเวลาเข้า / เลิกงาน</div>
         </div>
+        <i data-lucide="chevron-right" style="color: #cbd5e1; width: 24px; height: 24px;"></i>
       </div>
 
       <div class="menu-card" onclick="app.navigate('view-register')">
-        <div class="menu-icon icon-reg">👤</div>
+        <div class="menu-icon icon-reg"><i data-lucide="user-plus" style="width: 32px; height: 32px;"></i></div>
         <div class="menu-info">
           <div class="menu-title">ลงทะเบียนใหม่</div>
           <div class="menu-desc">บันทึกข้อมูลใบหน้าลงระบบ</div>
         </div>
+        <i data-lucide="chevron-right" style="color: #cbd5e1; width: 24px; height: 24px;"></i>
       </div>
     </div>
   </div>
@@ -283,25 +448,36 @@
        ========================================================= -->
   <div id="view-scan" class="view">
     <div class="top-nav">
-      <button class="btn-back" onclick="app.navigate('view-home')">← กลับเมนูหลัก</button>
+      <button class="btn-back" onclick="app.navigate('view-home')">
+        <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i> กลับเมนูหลัก
+      </button>
       <span class="nav-title">สแกนใบหน้า</span>
     </div>
 
-    <div class="card-panel" style="text-align: center; padding: 16px;">
-      <div id="scan-sys-status" style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 8px;">⏳ รอเริ่มการทำงาน...</div>
-      <div id="scan-gps-status" style="font-size: 0.85em; color: var(--primary);">📍 กำลังตรวจสอบตำแหน่ง...</div>
-    </div>
+    <div class="split-desktop">
+      <div class="side-panel">
+        <div class="card-panel" style="text-align: center; padding: 24px;">
+          <div id="scan-sys-status" style="font-size: 1.05em; color: var(--text-muted); margin-bottom: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 20px; height: 20px; color: var(--text-muted);"></i> รอเริ่มการทำงาน...
+          </div>
+          <div id="scan-gps-status" style="font-size: 0.95em; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> กำลังตรวจสอบตำแหน่ง...
+          </div>
+        </div>
+        <button id="btn-start-scan" class="btn btn-primary" onclick="app.startScanning()" style="padding: 18px; font-size: 18px;">
+          <i data-lucide="scan" style="width: 24px; height: 24px;"></i> แตะเพื่อเริ่มสแกน
+        </button>
+      </div>
 
-    <div class="video-container">
-      <div class="status-badge" id="scan-badge">เตรียมใช้งานกล้อง...</div>
-      <div class="scan-overlay"></div>
-      <div class="scan-line" id="scan-line"></div>
-      <video id="scan-video" autoplay muted playsinline></video>
+      <div class="video-container">
+        <div class="status-badge" id="scan-badge">
+          <i data-lucide="camera" style="width: 18px; height: 18px;"></i> เตรียมใช้งานกล้อง...
+        </div>
+        <div class="scan-overlay"></div>
+        <div class="scan-line" id="scan-line"></div>
+        <video id="scan-video" autoplay muted playsinline></video>
+      </div>
     </div>
-
-    <button id="btn-start-scan" class="btn btn-primary" onclick="app.startScanning()">
-      📸 แตะเพื่อเริ่มสแกน
-    </button>
   </div>
 
   <!-- =========================================================
@@ -309,27 +485,36 @@
        ========================================================= -->
   <div id="view-register" class="view">
     <div class="top-nav">
-      <button class="btn-back" onclick="app.navigate('view-home')">← กลับเมนูหลัก</button>
+      <button class="btn-back" onclick="app.navigate('view-home')">
+        <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i> กลับเมนูหลัก
+      </button>
       <span class="nav-title">ลงทะเบียนพนักงาน</span>
     </div>
 
-    <div class="video-container" style="min-height: 250px;">
-      <div class="status-badge" id="reg-badge">เตรียมกล้อง...</div>
-      <video id="reg-video" autoplay muted playsinline></video>
-    </div>
+    <div class="split-desktop">
+      <div class="side-panel">
+        <div class="card-panel">
+          <div class="form-group">
+            <label>ชื่อ-นามสกุล (Name - Surname)</label>
+            <input type="text" id="reg-name" class="form-control" placeholder="ระบุชื่อของคุณ">
+          </div>
+          <div style="text-align: center; margin-bottom: 20px; font-size: 0.9em; color: var(--text-muted);">
+            * ควรถ่าย 3 มุม: หน้าตรง / เอียงซ้าย / เอียงขวา
+          </div>
+          <button id="btn-save-face" class="btn btn-primary" onclick="app.registerFace()" disabled style="padding: 18px; font-size: 18px;">
+            <i data-lucide="save" style="width: 22px; height: 22px;"></i> บันทึกใบหน้า 
+            <span id="reg-count" style="background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 12px; font-size: 0.85em; margin-left: 6px;">0/3</span>
+          </button>
+          <div id="reg-msg" style="margin-top: 20px; text-align: center; font-size: 0.95em; line-height: 1.6;"></div>
+        </div>
+      </div>
 
-    <div class="card-panel">
-      <div class="form-group">
-        <label>ชื่อ-นามสกุล (Name - Surname)</label>
-        <input type="text" id="reg-name" class="form-control" placeholder="ระบุชื่อของคุณ">
+      <div class="video-container" style="min-height: 250px;">
+        <div class="status-badge" id="reg-badge">
+          <i data-lucide="camera" style="width: 18px; height: 18px;"></i> เตรียมกล้อง...
+        </div>
+        <video id="reg-video" autoplay muted playsinline></video>
       </div>
-      <div style="text-align: center; margin-bottom: 16px; font-size: 0.85em; color: var(--text-muted);">
-        * ควรถ่าย 3 มุม: หน้าตรง / เอียงซ้าย / เอียงขวา
-      </div>
-      <button id="btn-save-face" class="btn btn-primary" onclick="app.registerFace()" disabled>
-        📸 บันทึกใบหน้า <span id="reg-count" style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 5px;">0/3</span>
-      </button>
-      <div id="reg-msg" style="margin-top: 16px; text-align: center; font-size: 0.9em;"></div>
     </div>
   </div>
 
@@ -338,18 +523,26 @@
        ========================================================= -->
   <div id="view-admin-login" class="view">
     <div class="top-nav">
-      <button class="btn-back" onclick="app.navigate('view-home')">← กลับ</button>
+      <button class="btn-back" onclick="app.navigate('view-home')">
+        <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i> กลับ
+      </button>
       <span class="nav-title">ผู้ดูแลระบบ</span>
     </div>
     
-    <div class="card-panel" style="margin-top: 40px;">
-      <div style="text-align: center; font-size: 40px; margin-bottom: 16px;">🔐</div>
-      <div class="form-group">
-        <label>รหัสผ่าน Admin</label>
-        <input type="password" id="admin-pin" class="form-control" placeholder="••••••••">
+    <div class="center-widget" style="max-width: 500px; margin: 0 auto;">
+      <div class="card-panel" style="margin-top: 40px; padding: 40px 30px;">
+        <div style="text-align: center; margin-bottom: 24px; color: var(--primary);">
+          <i data-lucide="shield-check" style="width: 64px; height: 64px;"></i>
+        </div>
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label style="text-align: center;">รหัสผ่าน Admin</label>
+          <input type="password" id="admin-pin" class="form-control" placeholder="••••••••" style="text-align: center; font-size: 1.2em; letter-spacing: 2px;">
+        </div>
+        <button class="btn btn-primary" onclick="app.verifyAdmin()" style="padding: 16px; font-size: 1.1em;">
+          <i data-lucide="log-in" style="width: 20px; height: 20px;"></i> เข้าสู่ระบบ
+        </button>
+        <div id="admin-login-msg" style="color: var(--danger); text-align: center; margin-top: 16px; font-size: 0.95em; font-weight: 500;"></div>
       </div>
-      <button class="btn btn-primary" onclick="app.verifyAdmin()">เข้าสู่ระบบ</button>
-      <div id="admin-login-msg" style="color: var(--danger); text-align: center; margin-top: 12px; font-size: 0.9em;"></div>
     </div>
   </div>
 
@@ -358,25 +551,29 @@
        ========================================================= -->
   <div id="view-admin-dashboard" class="view">
     <div class="top-nav">
-      <button class="btn-back" onclick="app.adminLogout()">← ออกจากระบบ</button>
+      <button class="btn-back" onclick="app.adminLogout()">
+        <i data-lucide="log-out" style="width: 18px; height: 18px;"></i> ออกจากระบบ
+      </button>
       <span class="nav-title">แผงควบคุม Admin</span>
     </div>
 
     <div class="menu-grid">
       <div class="menu-card" onclick="app.navigate('view-report')">
-        <div class="menu-icon" style="background: rgba(245,158,11,0.2); color: #fbbf24;">📊</div>
+        <div class="menu-icon icon-report"><i data-lucide="bar-chart-3" style="width: 32px; height: 32px;"></i></div>
         <div class="menu-info">
           <div class="menu-title">รายงานการทำงาน</div>
           <div class="menu-desc">ดูประวัติเข้า-เลิกงานย้อนหลัง</div>
         </div>
+        <i data-lucide="chevron-right" style="color: #cbd5e1; width: 24px; height: 24px;"></i>
       </div>
 
       <div class="menu-card" onclick="app.navigate('view-config')">
-        <div class="menu-icon" style="background: rgba(148,163,184,0.2); color: #cbd5e1;">⚙️</div>
+        <div class="menu-icon icon-config"><i data-lucide="settings" style="width: 32px; height: 32px;"></i></div>
         <div class="menu-info">
           <div class="menu-title">ตั้งค่าระบบ & GPS</div>
           <div class="menu-desc">จัดการ API และจุดเช็คอิน</div>
         </div>
+        <i data-lucide="chevron-right" style="color: #cbd5e1; width: 24px; height: 24px;"></i>
       </div>
     </div>
   </div>
@@ -386,41 +583,53 @@
        ========================================================= -->
   <div id="view-config" class="view">
     <div class="top-nav">
-      <button class="btn-back" onclick="app.navigate('view-admin-dashboard')">← แผงควบคุม</button>
+      <button class="btn-back" onclick="app.navigate('view-admin-dashboard')">
+        <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i> แผงควบคุม
+      </button>
       <span class="nav-title">ตั้งค่าระบบ</span>
     </div>
 
-    <div class="card-panel">
-      <div style="margin-bottom: 16px; font-weight: 600; color: var(--primary);">🔗 การเชื่อมต่อ API</div>
-      <div class="form-group">
-        <label>Google Apps Script Web App URL</label>
-        <input type="url" id="cfg-api" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+    <div class="config-grid">
+      <div class="card-panel">
+        <div style="margin-bottom: 20px; font-weight: 700; font-size: 1.1em; color: var(--primary); display: flex; align-items: center; gap: 10px;">
+          <i data-lucide="link" style="width: 20px; height: 20px;"></i> การเชื่อมต่อ API
+        </div>
+        <div class="form-group">
+          <label>Google Apps Script Web App URL</label>
+          <input type="url" id="cfg-api" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <div style="margin-bottom: 20px; font-weight: 700; font-size: 1.1em; color: var(--success); display: flex; align-items: center; gap: 10px;">
+          <i data-lucide="map" style="width: 20px; height: 20px;"></i> ตั้งค่าจุดเช็คอิน (GPS)
+        </div>
+        <button class="btn btn-outline" style="margin-bottom: 20px; padding: 12px;" onclick="app.getAdminLocation()">
+          <i data-lucide="crosshair" style="width: 18px; height: 18px;"></i> ดึงพิกัดปัจจุบัน
+        </button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label>Latitude</label>
+            <input type="number" id="cfg-lat" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Longitude</label>
+            <input type="number" id="cfg-lng" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>รัศมีที่ยอมรับ (เมตร) *ใส่ 0 เพื่อปิดตรวจสอบ</label>
+          <input type="number" step="1" id="cfg-rad" class="form-control" placeholder="เช่น 100 (100 เมตร)">
+        </div>
       </div>
     </div>
 
-    <div class="card-panel">
-      <div style="margin-bottom: 16px; font-weight: 600; color: #34d399;">📍 ตั้งค่าจุดเช็คอิน (GPS)</div>
-      <button class="btn btn-outline" style="margin-bottom: 16px; padding: 10px;" onclick="app.getAdminLocation()">
-        🎯 ดึงพิกัดปัจจุบัน
+    <div class="center-widget" style="margin-top: 32px; max-width: 600px; margin-left: auto; margin-right: auto;">
+      <button class="btn btn-primary" onclick="app.saveConfig()" id="btn-save-cfg" style="padding: 18px; font-size: 1.1em;">
+        <i data-lucide="save" style="width: 20px; height: 20px;"></i> บันทึกการตั้งค่า
       </button>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-        <div class="form-group">
-          <label>Latitude</label>
-          <input type="number" id="cfg-lat" class="form-control">
-        </div>
-        <div class="form-group">
-          <label>Longitude</label>
-          <input type="number" id="cfg-lng" class="form-control">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>รัศมีที่ยอมรับ (เมตร) *ใส่ 0 เพื่อปิดตรวจสอบ</label>
-        <input type="number" step="1" id="cfg-rad" class="form-control" placeholder="เช่น 100 (100 เมตร)">
-      </div>
+      <div id="cfg-msg" style="text-align: center; margin-top: 20px; font-size: 1em; font-weight: 500;"></div>
     </div>
-
-    <button class="btn btn-primary" onclick="app.saveConfig()" id="btn-save-cfg">💾 บันทึกการตั้งค่า</button>
-    <div id="cfg-msg" style="text-align: center; margin-top: 16px; font-size: 0.9em;"></div>
   </div>
 
   <!-- =========================================================
@@ -428,15 +637,17 @@
        ========================================================= -->
   <div id="view-report" class="view">
     <div class="top-nav">
-      <button class="btn-back" onclick="app.navigate('view-admin-dashboard')">← แผงควบคุม</button>
+      <button class="btn-back" onclick="app.navigate('view-admin-dashboard')">
+        <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i> แผงควบคุม
+      </button>
       <span class="nav-title">ประวัติการทำงาน</span>
     </div>
 
-    <div class="card-panel" style="padding: 16px;">
+    <div class="card-panel report-widget" style="padding: 24px;">
       
       <!-- Filter เดือน/ปี (สำหรับดูรายเดือน) -->
-      <div id="filter-monthly" style="display: flex; gap: 8px; margin-bottom: 16px;">
-        <select id="report-month" class="form-control" style="flex: 1; padding: 10px;">
+      <div id="filter-monthly" style="display: flex; gap: 12px; margin-bottom: 24px; max-width: 700px; margin-left: auto; margin-right: auto;">
+        <select id="report-month" class="form-control" style="flex: 1; padding: 14px;">
           <option value="1">มกราคม</option>
           <option value="2">กุมภาพันธ์</option>
           <option value="3">มีนาคม</option>
@@ -450,32 +661,42 @@
           <option value="11">พฤศจิกายน</option>
           <option value="12">ธันวาคม</option>
         </select>
-        <select id="report-year" class="form-control" style="flex: 1; padding: 10px;">
+        <select id="report-year" class="form-control" style="flex: 1; padding: 14px;">
           <option value="2026">2026</option>
           <option value="2025">2025</option>
           <option value="2024">2024</option>
         </select>
-        <button class="btn btn-primary" style="width: auto; padding: 10px 16px; border-radius: 12px;" onclick="app.loadReportData()">🔍</button>
+        <button class="btn btn-primary" style="width: auto; padding: 12px 24px; border-radius: 14px;" onclick="app.loadReportData()">
+          <i data-lucide="search" style="width: 20px; height: 20px;"></i>
+        </button>
       </div>
 
       <!-- Filter รายวัน (สำหรับดูรายวัน) -->
-      <div id="filter-daily" style="display: none; gap: 8px; margin-bottom: 16px;">
-        <input type="date" id="report-date" class="form-control" style="flex: 1; padding: 10px;">
-        <button class="btn btn-primary" style="width: auto; padding: 10px 16px; border-radius: 12px;" onclick="app.loadDailyReport()">🔍</button>
+      <div id="filter-daily" style="display: none; gap: 12px; margin-bottom: 24px; max-width: 700px; margin-left: auto; margin-right: auto;">
+        <input type="date" id="report-date" class="form-control" style="flex: 1; padding: 14px;">
+        <button class="btn btn-primary" style="width: auto; padding: 12px 24px; border-radius: 14px;" onclick="app.loadDailyReport()">
+          <i data-lucide="search" style="width: 20px; height: 20px;"></i>
+        </button>
       </div>
 
-      <!-- Tabs สลับมุมมอง (2 บรรทัด) -->
-      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
-        <div style="display: flex; gap: 8px;">
-          <button class="btn btn-outline" id="btn-tab-daily" onclick="app.switchReportTab('daily')" style="flex: 1; padding: 8px; font-size: 0.85em;">📅 สรุปรายวัน</button>
-          <button class="btn btn-outline" id="btn-tab-summary" onclick="app.switchReportTab('summary')" style="flex: 1; padding: 8px; font-size: 0.85em;">📊 สรุปเดือน</button>
+      <!-- Tabs สลับมุมมอง -->
+      <div class="tabs-wrapper" style="max-width: 900px; margin: 0 auto 24px;">
+        <div class="tabs-row">
+          <button class="btn btn-outline" id="btn-tab-daily" onclick="app.switchReportTab('daily')" style="padding: 12px; font-size: 0.95em;">
+            <i data-lucide="calendar" style="width: 18px; height: 18px; margin-right: 6px;"></i> สรุปรายวัน
+          </button>
+          <button class="btn btn-outline" id="btn-tab-summary" onclick="app.switchReportTab('summary')" style="padding: 12px; font-size: 0.95em;">
+            <i data-lucide="pie-chart" style="width: 18px; height: 18px; margin-right: 6px;"></i> สรุปเดือน
+          </button>
         </div>
-        <div style="display: flex; gap: 8px;">
-          <button class="btn btn-outline" id="btn-tab-detail" onclick="app.switchReportTab('detail')" style="flex: 1; padding: 8px; font-size: 0.85em; background: var(--primary); border-color: var(--primary); color: white;">📝 รายละเอียด</button>
+        <div class="tabs-row">
+          <button class="btn btn-outline" id="btn-tab-detail" onclick="app.switchReportTab('detail')" style="padding: 12px; font-size: 0.95em; background: var(--primary); border-color: var(--primary); color: white;">
+            <i data-lucide="list" style="width: 18px; height: 18px; margin-right: 6px;"></i> รายละเอียด
+          </button>
         </div>
       </div>
 
-      <div id="report-status" style="text-align: center; color: var(--text-muted); margin-bottom: 10px;">
+      <div id="report-status" style="text-align: center; color: var(--text-muted); margin-bottom: 20px; padding: 30px 0; font-size: 1.1em;">
         กำลังโหลดข้อมูล...
       </div>
       
@@ -498,17 +719,19 @@
       </div>
 
       <!-- ปฏิทินสรุปรายบุคคล -->
-      <div class="table-container" id="table-summary-container" style="display: none; background: transparent; border: none; overflow: visible;">
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label style="color: #c7d2fe; font-size: 0.9em;">👤 เลือกพนักงานเพื่อดูปฏิทิน</label>
-          <select id="summary-user-select" class="form-control" onchange="app.renderCalendar()"></select>
+      <div class="table-container" id="table-summary-container" style="display: none; background: transparent; border: none; overflow: visible; box-shadow: none;">
+        <div class="form-group" style="margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto;">
+          <label style="color: var(--text-main); font-size: 1em; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="user" style="width: 20px; height: 20px;"></i> เลือกพนักงานเพื่อดูปฏิทิน
+          </label>
+          <select id="summary-user-select" class="form-control" style="padding: 16px; font-size: 1.05em;" onchange="app.renderCalendar()"></select>
         </div>
         <div class="calendar-wrapper" id="calendar-render-area">
           <!-- Calendar injected here -->
         </div>
         
         <!-- ส่วนแสดงรายละเอียดเวลาเมื่อคลิกวันที่ในปฏิทิน -->
-        <div id="cal-day-detail" style="margin-top: 16px; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid var(--border-color); display: none;">
+        <div id="cal-day-detail" style="margin-top: 24px; padding: 24px; background: #ffffff; border-radius: 16px; border: 1px solid var(--border-color); display: none; max-width: 600px; margin-left: auto; margin-right: auto; box-shadow: 0 8px 20px rgba(0,0,0,0.05);">
           <!-- Detail will be injected here -->
         </div>
       </div>
@@ -539,23 +762,25 @@
      ========================================================= -->
 <div class="modal-backdrop" id="scan-modal">
   <div class="modal">
-    <div class="modal-icon">👋</div>
-    <div style="color: var(--text-muted); font-size: 0.9em; margin-bottom: 4px;">ตรวจพบบุคคล</div>
+    <div class="modal-icon">
+      <i data-lucide="user-check" style="width: 100%; height: 100%;"></i>
+    </div>
+    <div style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 6px; font-weight: 600;">ตรวจพบบุคคล</div>
     <div class="modal-name" id="modal-user-name">ชื่อพนักงาน</div>
     
-    <div style="margin-bottom: 24px; font-size: 0.85em; color: var(--text-muted);">
-      ระยะความแม่นยำ: <span id="modal-score">0.00</span>
+    <div style="margin-bottom: 24px; font-size: 0.9em; color: var(--text-muted); background: #f1f5f9; padding: 10px; border-radius: 10px;">
+      ระยะความแม่นยำ: <span id="modal-score" style="font-weight: 700; color: var(--primary);">0.00</span>
     </div>
 
     <div class="modal-grid">
-      <button class="btn btn-success" id="btn-clock-in" onclick="app.submitAttendance('เข้างาน')">
-        🟢 บันทึกเข้างาน
+      <button class="btn btn-success" id="btn-clock-in" onclick="app.submitAttendance('เข้างาน')" style="padding: 14px;">
+        <i data-lucide="log-in" style="width: 20px; height: 20px;"></i> บันทึกเข้างาน
       </button>
-      <button class="btn btn-danger" id="btn-clock-out" onclick="app.submitAttendance('เลิกงาน')">
-        🔴 บันทึกเลิกงาน
+      <button class="btn btn-danger" id="btn-clock-out" onclick="app.submitAttendance('เลิกงาน')" style="padding: 14px;">
+        <i data-lucide="log-out" style="width: 20px; height: 20px;"></i> บันทึกเลิกงาน
       </button>
     </div>
-    <button class="btn btn-outline" style="padding: 12px; font-size: 0.9em;" onclick="app.closeModal()">
+    <button class="btn btn-outline" style="padding: 14px; font-size: 0.95em;" onclick="app.closeModal()">
       ไม่ใช่ฉัน (ยกเลิก)
     </button>
   </div>
@@ -583,7 +808,7 @@ const app = {
   regCounter: 0,
   calendarData: {},
 
-  // --- Utils (Thai Format) ---
+  // --- Utils ---
   formatThaiDate(dateStr) {
     if (!dateStr || dateStr === '-') return '-';
     if (typeof dateStr === 'string' && dateStr.includes('T')) {
@@ -607,23 +832,30 @@ const app = {
   
   formatThaiTime(timeStr) {
     if (!timeStr || timeStr === '-') return '-';
-    
     if (typeof timeStr === 'string' && timeStr.includes('T') && timeStr.includes('Z')) {
       try {
         const d = new Date(timeStr);
         return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) + ' น.';
       } catch(e) {}
     }
-
     const parts = String(timeStr).split(':');
     if (parts.length >= 2) return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')} น.`;
     return timeStr;
   },
 
+  setHtmlAndIcons(elId, htmlStr) {
+    const el = document.getElementById(elId);
+    if(el) {
+      el.innerHTML = htmlStr;
+      lucide.createIcons({ root: el });
+    }
+  },
+
   // --- 1. Core Functions ---
   init() {
+    lucide.createIcons(); // วาด Icon ทั้งหมดในโหลดครั้งแรก
     if(!this.apiUrl) {
-      document.getElementById('home-alert').style.display = 'block';
+      document.getElementById('home-alert').style.display = 'flex';
     } else {
       document.getElementById('home-alert').style.display = 'none';
     }
@@ -647,8 +879,7 @@ const app = {
 
   async loadAIModels(badgeId) {
     if(this.modelsLoaded) return true;
-    const badge = document.getElementById(badgeId);
-    badge.innerText = "กำลังโหลด AI Model (ครั้งแรกอาจใช้เวลา)...";
+    this.setHtmlAndIcons(badgeId, '<i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 18px; height: 18px;"></i> โหลด AI Model (อาจใช้เวลา)...');
     const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
     try {
       await Promise.all([
@@ -657,10 +888,10 @@ const app = {
         faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
       ]);
       this.modelsLoaded = true;
-      badge.innerText = "AI พร้อมใช้งาน";
+      this.setHtmlAndIcons(badgeId, '<i data-lucide="check-circle-2" style="width: 18px; height: 18px; color: var(--success);"></i> AI พร้อมใช้งาน');
       return true;
     } catch (e) {
-      badge.innerText = "❌ โหลด AI ล้มเหลว";
+      this.setHtmlAndIcons(badgeId, '<i data-lucide="x-circle" style="width: 18px; height: 18px; color: var(--danger);"></i> โหลดล้มเหลว');
       alert("Error loading AI: " + e.message);
       return false;
     }
@@ -682,7 +913,7 @@ const app = {
       document.getElementById('admin-login-msg').innerText = '';
       this.navigate('view-admin-dashboard');
     } else {
-      document.getElementById('admin-login-msg').innerText = '❌ รหัสผ่านไม่ถูกต้อง';
+      document.getElementById('admin-login-msg').innerText = 'รหัสผ่านไม่ถูกต้อง';
     }
   },
   adminLogout() { this.navigate('view-home'); },
@@ -705,7 +936,7 @@ const app = {
         document.getElementById('cfg-lng').value = pos.coords.longitude;
       },
       err => alert('ดึงพิกัดไม่ได้: ' + err.message),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } // เพิ่มความแม่นยำสูง
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   },
   async saveConfig() {
@@ -723,18 +954,17 @@ const app = {
 
     if(!lat || !lng || !rad) return msg.innerHTML = '<span style="color:var(--success)">บันทึกเฉพาะ API สำเร็จ (ข้อมูล GPS ไม่ครบ)</span>';
 
-    const btn = document.getElementById('btn-save-cfg');
-    btn.innerHTML = '<span class="loader"></span> กำลังบันทึก...';
+    this.setHtmlAndIcons('btn-save-cfg', '<span class="loader"></span> กำลังบันทึก...');
     try {
       const res = await fetch(api, {
         method: 'POST', body: JSON.stringify({ action: 'saveConfig', lat, lng, radius: rad })
       });
       await res.json();
-      msg.innerHTML = '<span style="color:var(--success)">✅ บันทึกตั้งค่าเรียบร้อย</span>';
+      msg.innerHTML = '<span style="color:var(--success)">บันทึกตั้งค่าเรียบร้อย</span>';
     } catch(e) {
-      msg.innerHTML = `<span style="color:var(--danger)">❌ Error: ${e.message}</span>`;
+      msg.innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
     }
-    btn.innerHTML = '💾 บันทึกการตั้งค่า';
+    this.setHtmlAndIcons('btn-save-cfg', '<i data-lucide="save" style="width: 20px; height: 20px;"></i> บันทึกการตั้งค่า');
   },
 
   // --- 3. Report View ---
@@ -786,7 +1016,7 @@ const app = {
     const calendarArea = document.getElementById('calendar-render-area');
     const status = document.getElementById('report-status');
     const detailDiv = document.getElementById('cal-day-detail');
-    if(detailDiv) detailDiv.style.display = 'none'; // ซ่อนกล่องเวลาคลิกวัน
+    if(detailDiv) detailDiv.style.display = 'none'; 
     
     const d = new Date();
     const mEl = document.getElementById('report-month');
@@ -802,9 +1032,9 @@ const app = {
     calendarArea.innerHTML = '';
     this.calendarData = {};
     status.style.display = 'block';
-    status.innerHTML = '<span class="loader"></span> กำลังดึงข้อมูล...';
+    this.setHtmlAndIcons('report-status', '<i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 24px; height: 24px;"></i> กำลังดึงข้อมูล...');
 
-    if(!this.apiUrl) return status.innerHTML = '❌ ไม่มี API URL';
+    if(!this.apiUrl) return this.setHtmlAndIcons('report-status', '<span style="color:var(--danger)">ไม่มี API URL</span>');
 
     try {
       const month = mEl.value;
@@ -815,9 +1045,9 @@ const app = {
       
       status.style.display = 'none';
       if(!Array.isArray(logs) || logs.length === 0) {
-         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">ไม่มีข้อมูลในเดือนนี้</td></tr>';
+         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted); padding: 30px;">ไม่มีข้อมูลในเดือนนี้</td></tr>';
          userSelect.innerHTML = '<option>ไม่มีข้อมูล</option>';
-         calendarArea.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding: 20px;">ไม่มีบันทึกการทำงานในเดือนนี้</div>';
+         calendarArea.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding: 40px;">ไม่มีบันทึกการทำงานในเดือนนี้</div>';
          return;
       }
 
@@ -830,7 +1060,6 @@ const app = {
             this.calendarData[log.name][dayNum] = { in: false, out: false, timeIn: '-', timeOut: '-' };
         }
         
-        // บันทึกสถานะการเข้าออก และเก็บข้อมูลเวลาไว้ใช้ตอนคลิกด้วย
         if(log.type === 'เข้างาน') {
             this.calendarData[log.name][dayNum].in = true;
             this.calendarData[log.name][dayNum].timeIn = this.formatThaiTime(log.time);
@@ -842,17 +1071,18 @@ const app = {
 
         const tr = document.createElement('tr');
         const typeClass = log.type === 'เข้างาน' ? 'type-in' : (log.type === 'เลิกงาน' ? 'type-out' : '');
-        const mapLink = log.map && log.map !== '-' ? `<a href="${log.map}" target="_blank" style="color:var(--primary)">📍 แผนที่</a>` : '-';
+        const mapLink = log.map && log.map !== '-' ? `<a href="${log.map}" target="_blank" style="color:var(--primary); text-decoration: none; display: flex; align-items: center; gap: 4px;"><i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> แผนที่</a>` : '-';
         
         tr.innerHTML = `
-          <td>${this.formatThaiDate(log.date)}</td>
+          <td style="font-weight: 500;">${this.formatThaiDate(log.date)}</td>
           <td>${this.formatThaiTime(log.time)}</td>
-          <td>${log.name}</td>
+          <td style="font-weight: 600; color: #1e293b;">${log.name}</td>
           <td class="${typeClass}">${log.type}</td>
           <td>${mapLink}</td>
         `;
         tbody.appendChild(tr);
       });
+      lucide.createIcons({ root: tbody });
 
       Object.keys(this.calendarData).sort().forEach(name => {
         const opt = document.createElement('option');
@@ -865,7 +1095,7 @@ const app = {
 
     } catch(e) {
       status.style.display = 'block';
-      status.innerHTML = `❌ เกิดข้อผิดพลาด: ${e.message} (เช็คว่าอัปเดต code.gs และ Deploy ใหม่หรือยัง)`;
+      this.setHtmlAndIcons('report-status', `<span style="color:var(--danger); display: flex; align-items: center; justify-content: center; gap: 8px;"><i data-lucide="alert-circle"></i> เกิดข้อผิดพลาด: ${e.message}</span>`);
     }
   },
 
@@ -873,12 +1103,11 @@ const app = {
     const area = document.getElementById('calendar-render-area');
     const userSelect = document.getElementById('summary-user-select');
     
-    // รีเซ็ตการแสดงรายละเอียดเวลาด้านล่าง
     const detailDiv = document.getElementById('cal-day-detail');
     if(detailDiv) detailDiv.style.display = 'none';
     
     if(!userSelect.value || !this.calendarData[userSelect.value]) {
-      area.innerHTML = '<div style="text-align:center; color:var(--text-muted);">ไม่มีข้อมูล</div>';
+      area.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding: 40px;">ไม่มีข้อมูล</div>';
       return;
     }
 
@@ -893,9 +1122,9 @@ const app = {
     
     let html = `
       <div class="calendar-header">
-        <div style="color: #fca5a5;">อา.</div>
+        <div style="color: #ef4444;">อา.</div>
         <div>จ.</div><div>อ.</div><div>พ.</div><div>พฤ.</div><div>ศ.</div>
-        <div style="color: #a5b4fc;">ส.</div>
+        <div style="color: var(--primary);">ส.</div>
       </div>
       <div class="calendar-grid">
     `;
@@ -916,7 +1145,6 @@ const app = {
         }
       }
       
-      // เพิ่ม id และ onclick เพื่อเรียกฟังก์ชันแสดงเวลา
       html += `<div class="cal-day ${statusClass}" id="cal-day-${d}" onclick="app.showDayDetail(${d})">${d}</div>`;
     }
     
@@ -931,7 +1159,6 @@ const app = {
     area.innerHTML = html;
   },
 
-  // ฟังก์ชันใหม่สำหรับคลิกดูรายละเอียดรายวันจากปฏิทิน
   showDayDetail(day) {
     const userSelect = document.getElementById('summary-user-select');
     const username = userSelect.value;
@@ -939,14 +1166,12 @@ const app = {
     
     if(!username || !this.calendarData[username]) return;
 
-    // ล้างกรอบสีขาวเก่า แล้วใส่กรอบที่วันที่ถูกคลิก (Highlight)
     document.querySelectorAll('.cal-day').forEach(el => el.classList.remove('selected-day'));
     const selectedEl = document.getElementById('cal-day-' + day);
     if(selectedEl) selectedEl.classList.add('selected-day');
 
     const data = this.calendarData[username][day];
     
-    // เอาชื่อเดือนภาษาไทย และพ.ศ. จาก Dropdown มาแสดงผล
     const monthSelect = document.getElementById('report-month');
     const monthStr = monthSelect.options[monthSelect.selectedIndex].text;
     const yearStr = parseInt(document.getElementById('report-year').value) + 543;
@@ -954,27 +1179,36 @@ const app = {
 
     if(!data) {
       detailDiv.innerHTML = `
-        <div style="font-weight: 600; margin-bottom: 8px; color: #cbd5e1;">📅 ${fullDateStr}</div>
-        <div style="color: var(--text-muted); font-size: 0.9em; text-align: center; padding: 10px 0;">ไม่มีบันทึกการทำงานในระบบ</div>
+        <div style="font-weight: 700; margin-bottom: 12px; font-size: 1.1em; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <i data-lucide="calendar" style="width: 20px; height: 20px;"></i> ${fullDateStr}
+        </div>
+        <div style="color: var(--text-muted); font-size: 1em; text-align: center; padding: 16px 0;">ไม่มีบันทึกการทำงานในระบบ</div>
       `;
     } else {
       const inTimeStr = data.timeIn !== '-' ? data.timeIn : '<span style="color:var(--text-muted)">-</span>';
       const outTimeStr = data.timeOut !== '-' ? data.timeOut : '<span style="color:var(--text-muted)">-</span>';
       
       detailDiv.innerHTML = `
-        <div style="font-weight: 600; margin-bottom: 12px; color: #a5b4fc; text-align: center;">📅 ${fullDateStr}</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.95em; text-align: center;">
-          <div style="background: rgba(16,185,129,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.2);">
-            <div style="color: var(--success); font-size: 0.85em; margin-bottom: 4px;">เข้างาน</div>
-            <div style="font-weight: 600;">${inTimeStr}</div>
+        <div style="font-weight: 700; margin-bottom: 20px; font-size: 1.15em; color: var(--primary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <i data-lucide="calendar" style="width: 22px; height: 22px;"></i> ${fullDateStr}
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 1em; text-align: center;">
+          <div style="background: rgba(16,185,129,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(16,185,129,0.2);">
+            <div style="color: var(--success); font-size: 0.9em; margin-bottom: 8px; font-weight: 700; display: flex; justify-content: center; align-items: center; gap: 6px;">
+              <i data-lucide="log-in" style="width: 18px; height: 18px;"></i> เข้างาน
+            </div>
+            <div style="font-weight: 700; color: #0f172a; font-size: 1.25em;">${inTimeStr}</div>
           </div>
-          <div style="background: rgba(245,158,11,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(245,158,11,0.2);">
-            <div style="color: var(--warning); font-size: 0.85em; margin-bottom: 4px;">เลิกงาน</div>
-            <div style="font-weight: 600;">${outTimeStr}</div>
+          <div style="background: rgba(245,158,11,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(245,158,11,0.2);">
+            <div style="color: var(--warning); font-size: 0.9em; margin-bottom: 8px; font-weight: 700; display: flex; justify-content: center; align-items: center; gap: 6px;">
+              <i data-lucide="log-out" style="width: 18px; height: 18px;"></i> เลิกงาน
+            </div>
+            <div style="font-weight: 700; color: #0f172a; font-size: 1.25em;">${outTimeStr}</div>
           </div>
         </div>
       `;
     }
+    lucide.createIcons({ root: detailDiv });
     detailDiv.style.display = 'block';
   },
 
@@ -987,9 +1221,9 @@ const app = {
 
     tbody.innerHTML = '';
     status.style.display = 'block';
-    status.innerHTML = '<span class="loader"></span> กำลังดึงข้อมูล...';
+    this.setHtmlAndIcons('report-status', '<i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 24px; height: 24px;"></i> กำลังดึงข้อมูล...');
 
-    if(!this.apiUrl) return status.innerHTML = '❌ ไม่มี API URL';
+    if(!this.apiUrl) return this.setHtmlAndIcons('report-status', '<span style="color:var(--danger)">ไม่มี API URL</span>');
 
     try {
       const dObj = new Date(dateVal);
@@ -1014,7 +1248,7 @@ const app = {
       }) : [];
 
       if(dailyLogs.length === 0) {
-         tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">ไม่มีผู้บันทึกเวลาในวันนี้</td></tr>';
+         tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-muted); padding: 30px;">ไม่มีผู้บันทึกเวลาในวันนี้</td></tr>';
          return;
       }
 
@@ -1031,7 +1265,7 @@ const app = {
         const inClass = times.in !== '-' ? 'type-in' : '';
         const outClass = times.out !== '-' ? 'type-out' : '';
         tr.innerHTML = `
-          <td style="font-weight: 600;">${name}</td>
+          <td style="font-weight: 600; color: #1e293b;">${name}</td>
           <td class="${inClass}">${this.formatThaiTime(times.in)}</td>
           <td class="${outClass}">${this.formatThaiTime(times.out)}</td>
         `;
@@ -1040,7 +1274,7 @@ const app = {
 
     } catch(e) {
       status.style.display = 'block';
-      status.innerHTML = `❌ เกิดข้อผิดพลาด: ${e.message} (เช็คว่าอัปเดต code.gs และ Deploy ใหม่หรือยัง)`;
+      this.setHtmlAndIcons('report-status', `<span style="color:var(--danger); display: flex; align-items: center; justify-content: center; gap: 8px;"><i data-lucide="alert-circle"></i> เกิดข้อผิดพลาด: ${e.message}</span>`);
     }
   },
 
@@ -1048,7 +1282,11 @@ const app = {
   async initRegisterView() {
     this.regCounter = 0;
     document.getElementById('reg-count').innerText = '0/3';
-    document.getElementById('reg-name').value = '';
+    
+    const nameInput = document.getElementById('reg-name');
+    nameInput.value = '';
+    nameInput.disabled = false; 
+    
     document.getElementById('reg-msg').innerText = '';
     document.getElementById('btn-save-face').disabled = true;
 
@@ -1060,29 +1298,48 @@ const app = {
       const video = document.getElementById('reg-video');
       video.srcObject = this.currentStream;
       await video.play().catch(e=>console.log(e)); 
-      document.getElementById('reg-badge').innerText = '📸 กล้องพร้อมใช้งาน';
+      this.setHtmlAndIcons('reg-badge', '<i data-lucide="camera" style="width: 18px; height: 18px;"></i> กล้องพร้อมใช้งาน');
       document.getElementById('btn-save-face').disabled = false;
     } catch(e) {
-      document.getElementById('reg-badge').innerText = '❌ เปิดกล้องไม่ได้';
+      this.setHtmlAndIcons('reg-badge', '<i data-lucide="camera-off" style="width: 18px; height: 18px;"></i> เปิดกล้องไม่ได้');
     }
   },
 
   async registerFace() {
-    const name = document.getElementById('reg-name').value.trim();
+    const nameInput = document.getElementById('reg-name');
+    const name = nameInput.value.trim();
     if(!name) return alert('กรุณาระบุชื่อพนักงาน');
     if(!this.apiUrl) return alert('กรุณาตั้งค่า API ก่อนในเมนูแอดมิน');
 
     const btn = document.getElementById('btn-save-face');
     const msg = document.getElementById('reg-msg');
     btn.disabled = true;
-    btn.innerHTML = '<span class="loader"></span> กำลังประมวลผล...';
+
+    if (this.regCounter === 0) {
+      this.setHtmlAndIcons('btn-save-face', '<span class="loader"></span> ตรวจสอบสิทธิ์...');
+      try {
+        const known = await fetch(this.apiUrl + '?action=getKnownFaces').then(r => r.json());
+        const isExist = known.some(u => String(u.label).trim() === name);
+        if (isExist) {
+          msg.innerHTML = `<span style="color:var(--danger)">ชื่อ "${name}" ถูกลงทะเบียนไปแล้ว ไม่สามารถทำซ้ำได้</span>`;
+          this.resetRegBtn();
+          return;
+        }
+      } catch(e) {
+        msg.innerHTML = `<span style="color:var(--danger)">ตรวจสอบข้อมูลล้มเหลว: ${e.message}</span>`;
+        this.resetRegBtn();
+        return;
+      }
+    }
+
+    this.setHtmlAndIcons('btn-save-face', '<span class="loader"></span> กำลังประมวลผล...');
 
     const video = document.getElementById('reg-video');
     const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
 
     if(!detection) {
-      msg.innerHTML = '<span style="color:var(--danger)">❌ ไม่พบใบหน้า กรุณามองกล้องให้ชัดเจน</span>';
-      this.resetRegBtn();
+      msg.innerHTML = `<span style="color:var(--danger)">ไม่พบใบหน้า กรุณามองกล้องให้ชัดเจน</span>`;
+      this.resetRegBtn(this.regCounter === 0 ? 'บันทึกใบหน้า' : 'บันทึกมุมต่อไป');
       return;
     }
 
@@ -1093,74 +1350,75 @@ const app = {
       });
       
       this.regCounter++;
+      nameInput.disabled = true; 
       document.getElementById('reg-count').innerText = `${this.regCounter}/3`;
-      msg.innerHTML = `<span style="color:var(--success)">✅ บันทึกมุมที่ ${this.regCounter} สำเร็จ!</span>`;
+      msg.innerHTML = `<span style="color:var(--success)">บันทึกมุมที่ ${this.regCounter} สำเร็จ!</span>`;
       
       if(this.regCounter >= 3) {
-        msg.innerHTML += '<br><b>ลงทะเบียนครบถ้วน สามารถใช้งานได้เลย</b>';
-        setTimeout(() => this.navigate('view-home'), 2000);
+        msg.innerHTML += '<br><b style="color: var(--text-main); font-size: 1.1em; display: inline-block; margin-top: 8px;">ลงทะเบียนครบถ้วน สามารถใช้งานได้เลย</b>';
+        setTimeout(() => this.navigate('view-home'), 2500);
       } else {
-        msg.innerHTML += '<br>กรุณาขยับหน้าเล็กน้อยแล้วกดบันทึกอีกครั้ง';
-        this.resetRegBtn('📸 บันทึกมุมต่อไป');
+        msg.innerHTML += '<br><span style="color: var(--text-muted);">กรุณาขยับหน้าเล็กน้อยแล้วกดบันทึกอีกครั้ง</span>';
+        this.resetRegBtn('บันทึกมุมต่อไป');
       }
     } catch(e) {
-      msg.innerHTML = `<span style="color:var(--danger)">❌ Error: ${e.message}</span>`;
-      this.resetRegBtn();
+      msg.innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
+      this.resetRegBtn(this.regCounter === 0 ? 'บันทึกใบหน้า' : 'บันทึกมุมต่อไป');
     }
   },
-  resetRegBtn(text = '📸 บันทึกใบหน้า') {
-    const btn = document.getElementById('btn-save-face');
-    btn.innerHTML = `${text} <span id="reg-count" style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 5px;">${this.regCounter}/3</span>`;
-    btn.disabled = false;
+
+  resetRegBtn(text = 'บันทึกใบหน้า') {
+    this.setHtmlAndIcons('btn-save-face', `<i data-lucide="save" style="width: 22px; height: 22px;"></i> ${text} <span id="reg-count" style="background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 12px; font-size: 0.85em; margin-left: 6px;">${this.regCounter}/3</span>`);
+    document.getElementById('btn-save-face').disabled = false;
   },
 
   // --- 5. Scan View (Attendance) ---
   async initScanView() {
-    document.getElementById('btn-start-scan').style.display = 'block';
+    document.getElementById('btn-start-scan').style.display = 'flex';
     document.getElementById('btn-start-scan').disabled = true;
     document.getElementById('scan-line').style.display = 'none';
     const sysStatus = document.getElementById('scan-sys-status');
     const gpsStatus = document.getElementById('scan-gps-status');
     
     if(!this.apiUrl) {
-      sysStatus.innerHTML = '<span style="color:var(--danger)">❌ ยังไม่ได้ตั้งค่า API</span>';
+      this.setHtmlAndIcons('scan-sys-status', '<span style="color:var(--danger)">ยังไม่ได้ตั้งค่า API</span>');
       return;
     }
 
     try {
-      sysStatus.innerText = '1/3 ตรวจสอบ GPS...';
+      this.setHtmlAndIcons('scan-sys-status', '<i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 20px; height: 20px; color: var(--text-muted);"></i> 1/3 ตรวจสอบ GPS...');
       await this.checkGPS(gpsStatus);
     } catch(e) {
-      sysStatus.innerHTML = `<span style="color:var(--danger)">❌ ${e.message}</span>`;
+      this.setHtmlAndIcons('scan-sys-status', `<span style="color:var(--danger)"><i data-lucide="x-circle" style="width: 20px; height: 20px; vertical-align: middle;"></i> ${e.message}</span>`);
       return; 
     }
 
     try {
-      sysStatus.innerText = 'กำลังเปิดกล้อง...';
+      this.setHtmlAndIcons('scan-sys-status', '<i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 20px; height: 20px; color: var(--text-muted);"></i> กำลังเปิดกล้อง...');
       this.currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       const video = document.getElementById('scan-video');
       video.srcObject = this.currentStream;
       await video.play().catch(e=>console.log(e)); 
     } catch(e) {
-      sysStatus.innerHTML = '<span style="color:var(--danger)">❌ เปิดกล้องไม่ได้ กรุณาอนุญาตให้สิทธิ์การใช้งานกล้อง</span>';
+      this.setHtmlAndIcons('scan-sys-status', '<span style="color:var(--danger)"><i data-lucide="camera-off" style="width: 20px; height: 20px; vertical-align: middle;"></i> เปิดกล้องไม่ได้ กรุณาอนุญาตให้สิทธิ์</span>');
       return;
     }
 
-    sysStatus.innerText = '2/3 โหลดระบบ AI...';
+    this.setHtmlAndIcons('scan-sys-status', '<i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 20px; height: 20px; color: var(--text-muted);"></i> 2/3 โหลดระบบ AI...');
     const aiOk = await this.loadAIModels('scan-badge');
     if(!aiOk) return;
 
-    sysStatus.innerText = '3/3 ดึงฐานข้อมูลพนักงาน...';
+    this.setHtmlAndIcons('scan-sys-status', '<i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 20px; height: 20px; color: var(--text-muted);"></i> 3/3 ดึงฐานข้อมูล...');
     try {
       const data = await fetch(this.apiUrl + '?action=getKnownFaces').then(r => r.json());
       if(data.length === 0) throw new Error("ไม่พบข้อมูลพนักงาน");
       this.knownFaces = data.map(u => ({ name: u.label, descriptor: new Float32Array(u.descriptor) }));
       
-      sysStatus.innerHTML = '<span style="color:var(--success)">✅ ระบบพร้อมใช้งาน</span>';
+      this.setHtmlAndIcons('scan-sys-status', '<span style="color:var(--success); font-weight: 700;"><i data-lucide="check-circle-2" style="width: 20px; height: 20px; vertical-align: middle;"></i> ระบบพร้อมใช้งาน</span>');
       document.getElementById('btn-start-scan').disabled = false;
-      document.getElementById('scan-badge').innerText = 'กล้องพร้อมแล้ว แตะเพื่อเริ่มสแกนได้เลย';
+      this.setHtmlAndIcons('scan-badge', '<i data-lucide="scan" style="width: 18px; height: 18px;"></i> กล้องพร้อมแล้ว แตะเพื่อสแกน');
     } catch(e) {
-      sysStatus.innerHTML = `<span style="color:var(--danger)">❌ Error: ${e.message}</span>`;
+      this.setHtmlAndIcons('scan-sys-status', `<span style="color:var(--danger)"><i data-lucide="x-circle" style="width: 20px; height: 20px; vertical-align: middle;"></i> Error: ${e.message}</span>`);
     }
   },
 
@@ -1174,19 +1432,19 @@ const app = {
         try {
           const config = await fetch(this.apiUrl + '?action=getConfig').then(r => r.json());
           if (!config.lat || !config.lng || config.radius == 0) {
-            statusEl.innerHTML = '📍 GPS: นอกพื้นที่/ไม่จำกัด';
+            this.setHtmlAndIcons('scan-gps-status', '<i data-lucide="map" style="width: 16px; height: 16px;"></i> GPS: นอกพื้นที่/ไม่จำกัด');
             return resolve(); 
           }
           const dist = this.haversine(this.currentLat, this.currentLng, config.lat, config.lng);
           if (dist <= config.radius) {
-            statusEl.innerHTML = `📍 GPS: อยู่ในพื้นที่ (${Math.round(dist)} เมตร)`;
+            this.setHtmlAndIcons('scan-gps-status', `<i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> GPS: อยู่ในพื้นที่ (${Math.round(dist)} เมตร)`);
             resolve();
           } else {
             reject(new Error(`คุณอยู่นอกพื้นที่ที่กำหนด (${Math.round(dist)} ม. / ${config.radius} ม.)`));
           }
         } catch(e) { reject(new Error('ตรวจสอบ GPS ล้มเหลว API Error')); }
       }, err => reject(new Error('กรุณาเปิด GPS (Location)')),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 } // เพิ่มความแม่นยำสูง
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 } 
       );
     });
   },
@@ -1194,7 +1452,7 @@ const app = {
   async startScanning() {
     const btn = document.getElementById('btn-start-scan');
     btn.style.display = 'none';
-    document.getElementById('scan-badge').innerText = 'กำลังสแกน... มองกล้อง';
+    this.setHtmlAndIcons('scan-badge', '<i data-lucide="scan-face" style="width: 18px; height: 18px;"></i> กำลังสแกน... มองกล้อง');
     document.getElementById('scan-line').style.display = 'block';
 
     const video = document.getElementById('scan-video');
@@ -1215,7 +1473,7 @@ const app = {
           clearInterval(this.scanInterval);
           this.showConfirmModal(best.name, best.distance);
         } else {
-          document.getElementById('scan-badge').innerText = `ไม่รู้จัก (${best.distance.toFixed(2)})`;
+          this.setHtmlAndIcons('scan-badge', `<i data-lucide="user-x" style="width: 18px; height: 18px;"></i> ไม่รู้จัก (${best.distance.toFixed(2)})`);
         }
       }
     }, 500);
@@ -1223,14 +1481,12 @@ const app = {
 
   async checkTodayStatus(name) {
     try {
-      // ดึงวันที่ปัจจุบัน (อ้างอิง TimeZone ประเทศไทย)
       const bkkDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Bangkok"}));
       const dd = String(bkkDate.getDate()).padStart(2, '0');
       const mm = String(bkkDate.getMonth() + 1).padStart(2, '0');
       const yyyy = bkkDate.getFullYear();
-      const todayStr = `${dd}/${mm}/${yyyy}`; // รูปแบบตรงกับที่ Google Sheets บันทึก
+      const todayStr = `${dd}/${mm}/${yyyy}`; 
 
-      // ดึง log ของเดือนปัจจุบันมาเช็ค
       const logs = await fetch(`${this.apiUrl}?action=getLogs&month=${parseInt(mm)}&year=${yyyy}`).then(r => r.json());
       
       let hasIn = false;
@@ -1264,30 +1520,28 @@ const app = {
     const btnIn = document.getElementById('btn-clock-in');
     const btnOut = document.getElementById('btn-clock-out');
     
-    // ตั้งสถานะให้โหลดดิ้งตอนเช็คข้อมูลจาก Sheets
     btnIn.disabled = true; btnOut.disabled = true;
-    btnIn.innerHTML = '<span class="loader"></span> ตรวจสอบสิทธิ์...';
-    btnOut.innerHTML = '<span class="loader"></span> ตรวจสอบสิทธิ์...';
+    this.setHtmlAndIcons('btn-clock-in', '<span class="loader"></span> ตรวจสอบสิทธิ์...');
+    this.setHtmlAndIcons('btn-clock-out', '<span class="loader"></span> ตรวจสอบสิทธิ์...');
     btnIn.style.opacity = '1'; btnOut.style.opacity = '1';
 
-    // เช็คสิทธิ์วันปัจจุบัน
     const status = await this.checkTodayStatus(name);
 
     if (status.hasIn) {
-      btnIn.innerHTML = '✅ เข้างานแล้ว';
+      this.setHtmlAndIcons('btn-clock-in', '<i data-lucide="check-circle-2" style="width: 20px; height: 20px;"></i> เข้างานแล้ว');
       btnIn.disabled = true;
       btnIn.style.opacity = '0.5';
     } else {
-      btnIn.innerHTML = '🟢 บันทึกเข้างาน';
+      this.setHtmlAndIcons('btn-clock-in', '<i data-lucide="log-in" style="width: 20px; height: 20px;"></i> บันทึกเข้างาน');
       btnIn.disabled = false;
     }
 
     if (status.hasOut) {
-      btnOut.innerHTML = '✅ เลิกงานแล้ว';
+      this.setHtmlAndIcons('btn-clock-out', '<i data-lucide="check-circle-2" style="width: 20px; height: 20px;"></i> เลิกงานแล้ว');
       btnOut.disabled = true;
       btnOut.style.opacity = '0.5';
     } else {
-      btnOut.innerHTML = '🔴 บันทึกเลิกงาน';
+      this.setHtmlAndIcons('btn-clock-out', '<i data-lucide="log-out" style="width: 20px; height: 20px;"></i> บันทึกเลิกงาน');
       btnOut.disabled = false;
     }
 
@@ -1301,8 +1555,8 @@ const app = {
     this.matchedName = null;
     document.getElementById('scan-video').play().catch(e=>console.log(e));
     
-    document.getElementById('scan-badge').innerText = 'กล้องพร้อม แตะเพื่อเริ่มสแกน';
-    document.getElementById('btn-start-scan').style.display = 'block';
+    this.setHtmlAndIcons('scan-badge', '<i data-lucide="scan" style="width: 18px; height: 18px;"></i> กล้องพร้อม แตะเพื่อเริ่มสแกน');
+    document.getElementById('btn-start-scan').style.display = 'flex';
   },
 
   async submitAttendance(typeStr) {
@@ -1310,8 +1564,8 @@ const app = {
     const btnOut = document.getElementById('btn-clock-out');
     btnIn.disabled = true; btnOut.disabled = true;
     
-    if(typeStr === 'เข้างาน') btnIn.innerHTML = '<span class="loader"></span> กำลังบันทึก...';
-    else btnOut.innerHTML = '<span class="loader"></span> กำลังบันทึก...';
+    if(typeStr === 'เข้างาน') this.setHtmlAndIcons('btn-clock-in', '<span class="loader"></span> กำลังบันทึก...');
+    else this.setHtmlAndIcons('btn-clock-out', '<span class="loader"></span> กำลังบันทึก...');
 
     try {
       await fetch(this.apiUrl, {
@@ -1323,12 +1577,12 @@ const app = {
       this.navigate('view-home');
     } catch(e) {
       alert(`❌ บันทึกล้มเหลว: ${e.message}`);
-      this.closeModal(); // รีเซ็ตเพื่อป้องกันบัคค้าง ให้สแกนใหม่
+      this.closeModal(); 
     }
   },
 
   haversine(lat1, lon1, lat2, lon2) {
-    const R = 6371000; // เปลี่ยนรัศมีโลกเป็นหน่วย เมตร (จากเดิม 6371 km)
+    const R = 6371000; 
     const dLat = (lat2-lat1)*Math.PI/180; 
     const dLon = (lon2-lon1)*Math.PI/180;
     const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
