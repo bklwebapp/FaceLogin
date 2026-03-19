@@ -323,11 +323,41 @@
     }
     .loader-dark { border-color: rgba(0,0,0,0.1); border-top-color: var(--primary); }
 
+    /* Image Modal (สำหรับดูรูปพนักงาน) */
+    .image-modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+      z-index: 200; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+    .image-modal-overlay.active {
+      display: flex; opacity: 1;
+    }
+    .image-modal-content {
+      position: relative; max-width: 90vw; max-height: 90vh;
+      animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .image-modal-content img {
+      max-width: 100%; max-height: 85vh; border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      border: 4px solid #fff; object-fit: contain;
+    }
+    .image-modal-close {
+      position: absolute; top: -16px; right: -16px;
+      background: var(--danger); color: white; border: none;
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: transform 0.2s; z-index: 201;
+    }
+    .image-modal-close:hover { transform: scale(1.1); background: var(--danger-hover); }
+
     /* Animations */
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes scanAnim { 0% { top: 10%; } 50% { top: 90%; } 100% { top: 10%; } }
     @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   </style>
 </head>
 <body>
@@ -805,6 +835,14 @@
   </div>
 </div>
 
+<!-- Image View Modal -->
+<div id="imageModal" class="image-modal-overlay" onclick="app.closeImageModal(event)">
+  <div class="image-modal-content">
+    <button class="image-modal-close" onclick="app.closeImageModal(event)"><i data-lucide="x" style="width: 20px; height: 20px;"></i></button>
+    <img id="modalFullImage" src="" alt="Employee Photo">
+  </div>
+</div>
+
 <!-- =========================================================
      APPLICATION LOGIC (JAVASCRIPT)
      ========================================================= -->
@@ -1071,7 +1109,8 @@ const app = {
         // รูปถ่ายพนักงาน (ถ้าไม่มีให้แสดงไอคอนแทน)
         let photoHtml = '<div style="width: 56px; height: 56px; background: #e2e8f0; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #94a3b8;"><i data-lucide="user" style="width: 24px; height: 24px;"></i></div>';
         if (emp.photo) {
-          photoHtml = `<img src="${emp.photo}" style="width: 56px; height: 56px; object-fit: cover; border-radius: 14px; border: 2px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">`;
+          // เพิ่ม Event onClick และ Hover Style เพื่อแสดงว่ารูปกดได้
+          photoHtml = `<img src="${emp.photo}" onclick="app.showImageModal('${emp.photo}')" title="คลิกเพื่อดูรูปขนาดใหญ่" style="width: 56px; height: 56px; object-fit: cover; border-radius: 14px; border: 2px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">`;
         }
 
         // จัด Format วันและเวลาให้แสดงแยกบรรทัดสวยงาม
@@ -1376,14 +1415,19 @@ const app = {
   // --- 4. Register View ---
   async initRegisterView() {
     this.regCounter = 0;
-    document.getElementById('reg-count').innerText = '0/3';
     
     const nameInput = document.getElementById('reg-name');
     nameInput.value = '';
     nameInput.disabled = false; 
     
     document.getElementById('reg-msg').innerText = '';
-    document.getElementById('btn-save-face').disabled = true;
+    
+    // รีเซ็ตปุ่มให้เป็นค่าเริ่มต้น
+    this.resetRegBtn('บันทึกใบหน้า');
+    const btn = document.getElementById('btn-save-face');
+    btn.disabled = true;
+    btn.classList.remove('btn-success');
+    btn.classList.add('btn-primary');
 
     const ok = await this.loadAIModels('reg-badge');
     if(!ok) return;
@@ -1394,13 +1438,16 @@ const app = {
       video.srcObject = this.currentStream;
       await video.play().catch(e=>console.log(e)); 
       this.setHtmlAndIcons('reg-badge', '<i data-lucide="camera" style="width: 18px; height: 18px;"></i> กล้องพร้อมใช้งาน');
-      document.getElementById('btn-save-face').disabled = false;
+      btn.disabled = false; // เปิดปุ่มเมื่อกล้องพร้อม
     } catch(e) {
       this.setHtmlAndIcons('reg-badge', '<i data-lucide="camera-off" style="width: 18px; height: 18px;"></i> เปิดกล้องไม่ได้');
     }
   },
 
   async registerFace() {
+    // ป้องกันการกดเบิ้ลหากเกินกำหนดแล้ว
+    if (this.regCounter >= 3) return;
+
     const nameInput = document.getElementById('reg-name');
     const name = nameInput.value.trim();
     if(!name) return alert('กรุณาระบุชื่อพนักงาน');
@@ -1442,32 +1489,38 @@ const app = {
     let photoBase64 = '';
     if (this.regCounter === 0) {
       const canvas = document.createElement('canvas');
-      const scale = 150 / Math.max(video.videoWidth, video.videoHeight); // ลดขนาดเหลือประมาณ 150px (ภาพจะไม่หนักและโหลดเร็ว)
+      const scale = 150 / Math.max(video.videoWidth, video.videoHeight); // ลดขนาดเหลือประมาณ 150px
       canvas.width = video.videoWidth * scale;
       canvas.height = video.videoHeight * scale;
       const ctx = canvas.getContext('2d');
-      // พลิกรูปภาพให้ถูกด้าน (ไม่สลับซ้ายขวาแบบกระจก)
       ctx.translate(canvas.width, 0); 
       ctx.scale(-1, 1);
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      photoBase64 = canvas.toDataURL('image/jpeg', 0.6); // บีบอัดเป็น JPEG ที่ 60%
+      photoBase64 = canvas.toDataURL('image/jpeg', 0.6); 
     }
 
     try {
       await fetch(this.apiUrl, {
         method: 'POST',
-        // ส่งข้อมูล photoBase64 ไปด้วย
         body: JSON.stringify({ action: 'registerUser', name, faceDescriptor: Array.from(detection.descriptor), photo: photoBase64 })
       });
       
       this.regCounter++;
       nameInput.disabled = true; 
-      document.getElementById('reg-count').innerText = `${this.regCounter}/3`;
+      
       msg.innerHTML = `<span style="color:var(--success)">บันทึกมุมที่ ${this.regCounter} สำเร็จ!</span>`;
       
       if(this.regCounter >= 3) {
-        msg.innerHTML += '<br><b style="color: var(--text-main); font-size: 1.1em; display: inline-block; margin-top: 8px;">ลงทะเบียนครบถ้วน สามารถใช้งานได้เลย</b>';
-        setTimeout(() => this.navigate('view-home'), 2500);
+        msg.innerHTML += '<br><b style="color: var(--primary); font-size: 1.1em; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 12px;"><i data-lucide="check-circle-2" style="width: 20px; height: 20px;"></i> ลงทะเบียนครบถ้วน ดำเนินการเสร็จสิ้น</b><span style="display: block; color: var(--text-muted); font-size: 0.9em; margin-top: 4px;">ระบบกำลังพากลับหน้าหลักอัตโนมัติ...</span>';
+        lucide.createIcons({ root: msg });
+        
+        // ล็อกปุ่มถาวรและเปลี่ยนสีเป็นสีเขียว
+        this.setHtmlAndIcons('btn-save-face', `<i data-lucide="check-check" style="width: 22px; height: 22px;"></i> เสร็จเรียบร้อย`);
+        btn.disabled = true;
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => this.navigate('view-home'), 3000);
       } else {
         msg.innerHTML += '<br><span style="color: var(--text-muted);">กรุณาขยับหน้าเล็กน้อยแล้วกดบันทึกอีกครั้ง</span>';
         this.resetRegBtn('บันทึกมุมต่อไป');
@@ -1668,6 +1721,27 @@ const app = {
     
     this.setHtmlAndIcons('scan-badge', '<i data-lucide="scan" style="width: 18px; height: 18px;"></i> กล้องพร้อม แตะเพื่อเริ่มสแกน');
     document.getElementById('btn-start-scan').style.display = 'flex';
+  },
+
+  // ฟังก์ชันสำหรับเปิดดูรูปภาพขนาดใหญ่
+  showImageModal(imgUrl) {
+    const modal = document.getElementById('imageModal');
+    const fullImg = document.getElementById('modalFullImage');
+    fullImg.src = imgUrl;
+    modal.style.display = 'flex';
+    // ใช้ setTimeout เล็กน้อยเพื่อให้ display: flex ทำงานก่อน แล้วค่อยให้ opacity เปลี่ยนเพื่อสร้าง Animation
+    setTimeout(() => modal.classList.add('active'), 10);
+  },
+
+  // ฟังก์ชันสำหรับปิดรูปภาพขนาดใหญ่
+  closeImageModal(e) {
+    // ปิดเมื่อคลิกที่ฉากหลังสีดำ หรือ คลิกที่ปุ่มกากบาท
+    if (e && e.target.id === 'imageModal' || (e && e.target.closest('.image-modal-close'))) {
+      const modal = document.getElementById('imageModal');
+      modal.classList.remove('active');
+      // รอให้ Animation เฟดออกเสร็จก่อนแล้วค่อยซ่อน element (0.3 วินาที)
+      setTimeout(() => { modal.style.display = 'none'; }, 300);
+    }
   },
 
   async submitAttendance(typeStr) {
