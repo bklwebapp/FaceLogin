@@ -641,7 +641,7 @@
         <div style="margin-bottom: 20px; font-weight: 700; font-size: 1.1em; color: var(--success); display: flex; align-items: center; gap: 10px;">
           <i data-lucide="map" style="width: 20px; height: 20px;"></i> ตั้งค่าจุดเช็คอิน (GPS)
         </div>
-        <button class="btn btn-outline" style="margin-bottom: 20px; padding: 12px;" onclick="app.getAdminLocation()">
+        <button id="btn-get-admin-loc" class="btn btn-outline" style="margin-bottom: 20px; padding: 12px;" onclick="app.getAdminLocation()">
           <i data-lucide="crosshair" style="width: 18px; height: 18px;"></i> ดึงพิกัดปัจจุบัน
         </button>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -992,17 +992,66 @@ const app = {
       document.getElementById('cfg-rad').value = res.radius || '0';
     } catch(e) { console.error('Config fetch error', e); }
   },
-  getAdminLocation() {
-    if (!navigator.geolocation) return alert('Browser ไม่รองรับ GPS');
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        document.getElementById('cfg-lat').value = pos.coords.latitude;
-        document.getElementById('cfg-lng').value = pos.coords.longitude;
-      },
-      err => alert('ดึงพิกัดไม่ได้: ' + err.message),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+
+  // ฟังก์ชันใหม่: ค้นหา GPS แบบจับสัญญาณให้เสถียรที่สุดในเวลาที่กำหนด (แก้ปัญหาพิกัดกระโดด)
+  getAccurateLocation() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        return reject(new Error('Device ไม่รองรับ GPS'));
+      }
+
+      let bestPos = null;
+      let watchId = navigator.geolocation.watchPosition(
+        pos => {
+          // เก็บค่าพิกัดที่ดีที่สุด (ความคลาดเคลื่อนน้อยที่สุด)
+          if (!bestPos || pos.coords.accuracy < bestPos.coords.accuracy) {
+            bestPos = pos;
+          }
+          // ถ้าระยะคลาดเคลื่อน (accuracy) น้อยกว่า 20 เมตร ถือว่าแม่นยำพอ ให้เลิกค้นหาทันที
+          if (bestPos.coords.accuracy <= 20) {
+            navigator.geolocation.clearWatch(watchId);
+            clearTimeout(timeoutId);
+            resolve(bestPos);
+          }
+        },
+        err => {
+          if (!bestPos) {
+            navigator.geolocation.clearWatch(watchId);
+            clearTimeout(timeoutId);
+            reject(new Error('กรุณาอนุญาตหรือเปิด GPS (Location)'));
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+
+      // รอสูงสุด 8 วินาที เพื่อให้ GPS อุ่นเครื่องและนิ่งที่สุด
+      let timeoutId = setTimeout(() => {
+        navigator.geolocation.clearWatch(watchId);
+        if (bestPos) {
+          resolve(bestPos);
+        } else {
+          reject(new Error('ค้นหาสัญญาณ GPS ไม่สำเร็จ หรือสัญญาณอ่อนมาก'));
+        }
+      }, 8000);
+    });
   },
+
+  async getAdminLocation() {
+    const btn = document.getElementById('btn-get-admin-loc');
+    if(btn) this.setHtmlAndIcons('btn-get-admin-loc', '<i data-lucide="loader-2" class="loader-dark" style="animation: spin 1.5s linear infinite; width: 18px; height: 18px;"></i> กำลังค้นหาสัญญาณที่แม่นยำ...');
+
+    try {
+      const pos = await this.getAccurateLocation();
+      document.getElementById('cfg-lat').value = pos.coords.latitude;
+      document.getElementById('cfg-lng').value = pos.coords.longitude;
+      alert(`✅ ดึงพิกัดเรียบร้อย (ความคลาดเคลื่อน ±${Math.round(pos.coords.accuracy)} เมตร)`);
+    } catch(e) {
+      alert('ดึงพิกัดไม่ได้: ' + e.message);
+    }
+
+    if(btn) this.setHtmlAndIcons('btn-get-admin-loc', '<i data-lucide="crosshair" style="width: 18px; height: 18px;"></i> ดึงพิกัดปัจจุบัน');
+  },
+
   async saveConfig() {
     const api = document.getElementById('cfg-api').value.trim();
     const lat = document.getElementById('cfg-lat').value;
@@ -1593,31 +1642,31 @@ const app = {
     }
   },
 
-  checkGPS(statusEl) {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) return reject(new Error('Device ไม่รองรับ GPS'));
+  async checkGPS(statusEl) {
+    try {
+      // ใช้ฟังก์ชันใหม่ที่กรอง GPS ที่แม่นยำแล้ว
+      const pos = await this.getAccurateLocation();
+      this.currentLat = pos.coords.latitude;
+      this.currentLng = pos.coords.longitude;
+      const accuracy = Math.round(pos.coords.accuracy);
+
+      const config = await fetch(this.apiUrl + '?action=getConfig').then(r => r.json());
       
-      navigator.geolocation.getCurrentPosition(async pos => {
-        this.currentLat = pos.coords.latitude;
-        this.currentLng = pos.coords.longitude;
-        try {
-          const config = await fetch(this.apiUrl + '?action=getConfig').then(r => r.json());
-          if (!config.lat || !config.lng || config.radius == 0) {
-            this.setHtmlAndIcons('scan-gps-status', '<i data-lucide="map" style="width: 16px; height: 16px;"></i> GPS: นอกพื้นที่/ไม่จำกัด');
-            return resolve(); 
-          }
-          const dist = this.haversine(this.currentLat, this.currentLng, config.lat, config.lng);
-          if (dist <= config.radius) {
-            this.setHtmlAndIcons('scan-gps-status', `<i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> GPS: อยู่ในพื้นที่ (${Math.round(dist)} เมตร)`);
-            resolve();
-          } else {
-            reject(new Error(`คุณอยู่นอกพื้นที่ที่กำหนด (${Math.round(dist)} ม. / ${config.radius} ม.)`));
-          }
-        } catch(e) { reject(new Error('ตรวจสอบ GPS ล้มเหลว API Error')); }
-      }, err => reject(new Error('กรุณาเปิด GPS (Location)')),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 } 
-      );
-    });
+      if (!config.lat || !config.lng || config.radius == 0) {
+        this.setHtmlAndIcons('scan-gps-status', `<i data-lucide="map" style="width: 16px; height: 16px;"></i> GPS: นอกพื้นที่/ไม่จำกัด (±${accuracy}ม.)`);
+        return; 
+      }
+      
+      const dist = this.haversine(this.currentLat, this.currentLng, config.lat, config.lng);
+      
+      if (dist <= config.radius) {
+        this.setHtmlAndIcons('scan-gps-status', `<i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> GPS: อยู่ในพื้นที่ (${Math.round(dist)} เมตร, ±${accuracy}ม.)`);
+      } else {
+        throw new Error(`คุณอยู่นอกพื้นที่กำหนด (${Math.round(dist)} ม. / ${config.radius} ม.)`);
+      }
+    } catch(e) {
+      throw new Error(e.message || 'ตรวจสอบ GPS ล้มเหลว');
+    }
   },
 
   async startScanning() {
