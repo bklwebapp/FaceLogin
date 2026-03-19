@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ระบบบันทึกเวลาเข้างาน</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <!-- โหลด Library สำหรับจดจำใบหน้า และ ชุด Icon ที่สวยงาม -->
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   
@@ -14,19 +13,19 @@
        CSS VARIABLES & GLOBAL RESET (LIGHT THEME)
        ========================================================================== */
     :root {
-      --bg-main: #f8fafc;          /* พื้นหลังหลัก (Slate 50) */
-      --bg-card: rgba(255, 255, 255, 0.85); /* การ์ดกระจกใส */
+      --bg-main: #f8fafc;
+      --bg-card: rgba(255, 255, 255, 0.85);
       --bg-card-hover: rgba(255, 255, 255, 1);
       --border-color: rgba(203, 213, 225, 0.8);
-      --text-main: #0f172a;        /* สีตัวอักษรหลัก (Slate 900) */
-      --text-muted: #64748b;       /* สีตัวอักษรรอง (Slate 500) */
-      --primary: #4f46e5;          /* สีหลัก (Indigo 600) */
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #4f46e5;
       --primary-hover: #4338ca;
-      --success: #10b981;          /* สีเขียว */
+      --success: #10b981;
       --success-hover: #059669;
-      --danger: #ef4444;           /* สีแดง */
+      --danger: #ef4444;
       --danger-hover: #dc2626;
-      --warning: #f59e0b;          /* สีส้ม */
+      --warning: #f59e0b;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,7 +46,6 @@
       padding: 0 16px;
     }
 
-    /* Base Container (Mobile First) */
     .app-container {
       width: 100%;
       max-width: 500px;
@@ -57,7 +55,7 @@
     }
 
     /* ==========================================================================
-       RESPONSIVE DESKTOP LAYOUT (อัปเกรดให้รองรับจอคอมพิวเตอร์เต็มจอ)
+       RESPONSIVE DESKTOP LAYOUT
        ========================================================================== */
     .center-widget { width: 100%; }
     .report-widget { width: 100%; }
@@ -69,7 +67,7 @@
 
     @media (min-width: 768px) {
       .app-container {
-        max-width: 1200px; /* ขยายกว้างสุดสำหรับ Desktop */
+        max-width: 1200px;
         padding: 50px 32px 100px;
       }
       .header { margin-bottom: 48px !important; }
@@ -77,7 +75,6 @@
       .title { font-size: 2.6em !important; letter-spacing: -0.5px; }
       .subtitle { font-size: 1.15em !important; }
       
-      /* Grid Layout สำหรับเมนู */
       .menu-grid {
         display: grid !important;
         grid-template-columns: repeat(2, 1fr);
@@ -90,7 +87,6 @@
       .menu-title { font-size: 1.4em !important; }
       .menu-desc { font-size: 1em !important; }
       
-      /* Split Layout (แบ่งซ้าย-ขวา สำหรับหน้าสแกนและลงทะเบียน) */
       .split-desktop {
         display: grid;
         grid-template-columns: 1fr 1.2fr;
@@ -113,7 +109,6 @@
         justify-content: center;
       }
       
-      /* การตั้งค่าแบ่งเป็น 2 คอลัมน์ซ้ายขวา */
       .config-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -122,15 +117,12 @@
       }
       .config-grid .card-panel { margin-bottom: 0; }
       
-      /* Tab รายงานจัดเรียงแนวนอน */
       .tabs-wrapper { flex-direction: row; }
       .tabs-row { flex: 1; }
       
-      /* ปฏิทินไม่ให้กว้างเกินไปบนจอใหญ่ */
       .calendar-wrapper { max-width: 800px; margin: 0 auto; padding: 32px !important; }
       .cal-day { font-size: 1.3em !important; }
       
-      /* ตารางกว้างขึ้น อ่านง่าย */
       .table-container { box-shadow: 0 4px 20px rgba(0,0,0,0.03) !important; border-radius: 16px !important; }
       th, td { padding: 20px 24px !important; font-size: 1.05em !important; }
     }
@@ -147,10 +139,8 @@
     /* ==========================================================================
        COMPONENTS
        ========================================================================== */
-    /* Header & Nav */
     .header { text-align: center; margin-bottom: 32px; position: relative; }
     
-    /* Custom SVG Logo อาคารสำนักงานทางการ */
     .header-icon-svg {
       width: 60px; height: 60px; 
       margin-bottom: 12px; display: inline-block;
@@ -488,7 +478,7 @@
       <button class="btn-back" onclick="app.navigate('view-home')">
         <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i> กลับเมนูหลัก
       </button>
-      <span class="nav-title">สแกนใบหน้า</span>
+      <span class="nav-title">สแกนเข้างาน</span>
     </div>
 
     <div class="split-desktop">
@@ -497,8 +487,8 @@
           <div id="scan-sys-status" style="font-size: 1.05em; color: var(--text-muted); margin-bottom: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;">
             <i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 20px; height: 20px; color: var(--text-muted);"></i> รอเริ่มการทำงาน...
           </div>
-          <div id="scan-gps-status" style="font-size: 0.95em; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> กำลังตรวจสอบตำแหน่ง...
+          <div id="scan-gps-status" style="font-size: 0.95em; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 8px; text-align: left; line-height: 1.4;">
+            <i data-lucide="map-pin" style="width: 16px; height: 16px; flex-shrink: 0;"></i> กำลังตรวจสอบตำแหน่ง...
           </div>
         </div>
         <button id="btn-start-scan" class="btn btn-primary" onclick="app.startScanning()" style="padding: 18px; font-size: 18px;">
@@ -656,14 +646,35 @@
         </div>
         <div class="form-group">
           <label>รัศมีที่ยอมรับ (เมตร) *ใส่ 0 เพื่อปิดตรวจสอบ</label>
-          <input type="number" step="1" id="cfg-rad" class="form-control" placeholder="เช่น 100 (100 เมตร)">
+          <input type="number" step="1" id="cfg-rad" class="form-control" placeholder="เช่น 10 (10 เมตร)">
+        </div>
+      </div>
+
+      <!-- ส่วนตั้งค่า Wi-Fi IP เพื่อ Bypass GPS -->
+      <div class="card-panel" style="grid-column: 1 / -1;">
+        <div style="margin-bottom: 20px; font-weight: 700; font-size: 1.1em; color: var(--warning); display: flex; align-items: center; gap: 10px;">
+          <i data-lucide="wifi" style="width: 20px; height: 20px;"></i> ตั้งค่าเครือข่าย Wi-Fi ออฟฟิศ (แก้ปัญหาพิกัด GPS ในอาคาร)
+        </div>
+        <div class="form-group">
+          <label>IP ของอินเทอร์เน็ตออฟฟิศ (Public IP)</label>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <input type="text" id="cfg-ip" class="form-control" placeholder="เช่น 118.174.x.x">
+            <button class="btn btn-outline" style="width: auto; padding: 14px 20px; flex-shrink: 0;" onclick="app.getAdminIP()">
+              <i data-lucide="download" style="width: 18px; height: 18px;"></i> ดึง IP ปัจจุบัน
+            </button>
+          </div>
+          <div style="font-size: 0.85em; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">
+            * คำแนะนำ: ให้ Admin เชื่อมต่อ Wi-Fi ของบริษัทแล้วกดปุ่ม "ดึง IP"<br>
+            * เมื่อพนักงานใช้ Wi-Fi เดียวกัน ระบบจะอนุญาตให้เช็คอินทันที (ข้ามการเช็คระยะ GPS)<br>
+            * ปล่อยช่องว่างไว้ หากไม่ต้องการใช้งานระบบตรวจสอบ Wi-Fi
+          </div>
         </div>
       </div>
     </div>
 
     <div class="center-widget" style="margin-top: 32px; max-width: 600px; margin-left: auto; margin-right: auto;">
       <button class="btn btn-primary" onclick="app.saveConfig()" id="btn-save-cfg" style="padding: 18px; font-size: 1.1em;">
-        <i data-lucide="save" style="width: 20px; height: 20px;"></i> บันทึกการตั้งค่า
+        <i data-lucide="save" style="width: 20px; height: 20px;"></i> บันทึกการตั้งค่าทั้งหมด
       </button>
       <div id="cfg-msg" style="text-align: center; margin-top: 20px; font-size: 1em; font-weight: 500;"></div>
     </div>
@@ -990,10 +1001,10 @@ const app = {
       document.getElementById('cfg-lat').value = res.lat || '';
       document.getElementById('cfg-lng').value = res.lng || '';
       document.getElementById('cfg-rad').value = res.radius || '0';
+      document.getElementById('cfg-ip').value = res.officeIp || '';
     } catch(e) { console.error('Config fetch error', e); }
   },
 
-  // ฟังก์ชันใหม่: ค้นหา GPS แบบจับสัญญาณให้เสถียรที่สุดในเวลาที่กำหนด (แก้ปัญหาพิกัดกระโดด)
   getAccurateLocation() {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -1003,12 +1014,10 @@ const app = {
       let bestPos = null;
       let watchId = navigator.geolocation.watchPosition(
         pos => {
-          // เก็บค่าพิกัดที่ดีที่สุด (ความคลาดเคลื่อนน้อยที่สุด)
           if (!bestPos || pos.coords.accuracy < bestPos.coords.accuracy) {
             bestPos = pos;
           }
-          // ถ้าระยะคลาดเคลื่อน (accuracy) น้อยกว่า 20 เมตร ถือว่าแม่นยำพอ ให้เลิกค้นหาทันที
-          if (bestPos.coords.accuracy <= 20) {
+          if (bestPos.coords.accuracy <= 10) {
             navigator.geolocation.clearWatch(watchId);
             clearTimeout(timeoutId);
             resolve(bestPos);
@@ -1021,10 +1030,9 @@ const app = {
             reject(new Error('กรุณาอนุญาตหรือเปิด GPS (Location)'));
           }
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
 
-      // รอสูงสุด 8 วินาที เพื่อให้ GPS อุ่นเครื่องและนิ่งที่สุด
       let timeoutId = setTimeout(() => {
         navigator.geolocation.clearWatch(watchId);
         if (bestPos) {
@@ -1032,7 +1040,7 @@ const app = {
         } else {
           reject(new Error('ค้นหาสัญญาณ GPS ไม่สำเร็จ หรือสัญญาณอ่อนมาก'));
         }
-      }, 8000);
+      }, 10000);
     });
   },
 
@@ -1052,11 +1060,24 @@ const app = {
     if(btn) this.setHtmlAndIcons('btn-get-admin-loc', '<i data-lucide="crosshair" style="width: 18px; height: 18px;"></i> ดึงพิกัดปัจจุบัน');
   },
 
+  async getAdminIP() {
+    try {
+      this.setHtmlAndIcons('cfg-msg', '<i data-lucide="loader-2" class="loader-dark" style="animation: spin 1.5s linear infinite; width: 18px; height: 18px;"></i> กำลังดึง IP...');
+      const res = await fetch('https://api.ipify.org?format=json');
+      const data = await res.json();
+      document.getElementById('cfg-ip').value = data.ip;
+      this.setHtmlAndIcons('cfg-msg', `<span style="color:var(--success)">✅ ดึง IP สำเร็จ: ${data.ip}</span>`);
+    } catch(e) {
+      this.setHtmlAndIcons('cfg-msg', `<span style="color:var(--danger)">❌ ดึง IP ไม่ได้: ${e.message}</span>`);
+    }
+  },
+
   async saveConfig() {
     const api = document.getElementById('cfg-api').value.trim();
     const lat = document.getElementById('cfg-lat').value;
     const lng = document.getElementById('cfg-lng').value;
     const rad = document.getElementById('cfg-rad').value;
+    const officeIp = document.getElementById('cfg-ip').value.trim();
     const msg = document.getElementById('cfg-msg');
 
     if(!api) return msg.innerHTML = '<span style="color:var(--danger)">กรุณาใส่ API URL</span>';
@@ -1065,19 +1086,19 @@ const app = {
     this.apiUrl = api;
     this.init(); 
 
-    if(!lat || !lng || !rad) return msg.innerHTML = '<span style="color:var(--success)">บันทึกเฉพาะ API สำเร็จ (ข้อมูล GPS ไม่ครบ)</span>';
+    if(!lat || !lng || !rad) return msg.innerHTML = '<span style="color:var(--success)">บันทึกเฉพาะ API หรือ IP สำเร็จ (ข้อมูล GPS ไม่ครบ)</span>';
 
     this.setHtmlAndIcons('btn-save-cfg', '<span class="loader"></span> กำลังบันทึก...');
     try {
       const res = await fetch(api, {
-        method: 'POST', body: JSON.stringify({ action: 'saveConfig', lat, lng, radius: rad })
+        method: 'POST', body: JSON.stringify({ action: 'saveConfig', lat, lng, radius: rad, officeIp: officeIp })
       });
       await res.json();
       msg.innerHTML = '<span style="color:var(--success)">บันทึกตั้งค่าเรียบร้อย</span>';
     } catch(e) {
       msg.innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
     }
-    this.setHtmlAndIcons('btn-save-cfg', '<i data-lucide="save" style="width: 20px; height: 20px;"></i> บันทึกการตั้งค่า');
+    this.setHtmlAndIcons('btn-save-cfg', '<i data-lucide="save" style="width: 20px; height: 20px;"></i> บันทึกการตั้งค่าทั้งหมด');
   },
 
   // --- 3. Report View ---
@@ -1149,7 +1170,6 @@ const app = {
          return;
       }
 
-      // ระบบบันทึกคนละ 3 มุม เลยรวมให้แสดงคนละ 1 รายการ
       const uniqueEmployees = {};
       employees.forEach(emp => {
         if (!uniqueEmployees[emp.name]) {
@@ -1162,14 +1182,11 @@ const app = {
       Object.values(uniqueEmployees).forEach(emp => {
         const tr = document.createElement('tr');
         
-        // รูปถ่ายพนักงาน (ถ้าไม่มีให้แสดงไอคอนแทน)
         let photoHtml = '<div style="width: 56px; height: 56px; background: #e2e8f0; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #94a3b8;"><i data-lucide="user" style="width: 24px; height: 24px;"></i></div>';
         if (emp.photo) {
-          // เพิ่ม Event onClick และ Hover Style เพื่อแสดงว่ารูปกดได้
           photoHtml = `<img src="${emp.photo}" onclick="app.showImageModal('${emp.photo}')" title="คลิกเพื่อดูรูปขนาดใหญ่" style="width: 56px; height: 56px; object-fit: cover; border-radius: 14px; border: 2px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">`;
         }
 
-        // จัด Format วันและเวลาให้แสดงแยกบรรทัดสวยงาม
         let regDate = '-';
         let regTime = '';
         if (emp.registeredAt !== '-') {
@@ -1478,7 +1495,6 @@ const app = {
     
     document.getElementById('reg-msg').innerText = '';
     
-    // รีเซ็ตปุ่มให้เป็นค่าเริ่มต้น
     this.resetRegBtn('บันทึกใบหน้า');
     const btn = document.getElementById('btn-save-face');
     btn.disabled = true;
@@ -1494,14 +1510,13 @@ const app = {
       video.srcObject = this.currentStream;
       await video.play().catch(e=>console.log(e)); 
       this.setHtmlAndIcons('reg-badge', '<i data-lucide="camera" style="width: 18px; height: 18px;"></i> กล้องพร้อมใช้งาน');
-      btn.disabled = false; // เปิดปุ่มเมื่อกล้องพร้อม
+      btn.disabled = false; 
     } catch(e) {
       this.setHtmlAndIcons('reg-badge', '<i data-lucide="camera-off" style="width: 18px; height: 18px;"></i> เปิดกล้องไม่ได้');
     }
   },
 
   async registerFace() {
-    // ป้องกันการกดเบิ้ลหากเกินกำหนดแล้ว
     if (this.regCounter >= 3) return;
 
     const nameInput = document.getElementById('reg-name');
@@ -1541,11 +1556,10 @@ const app = {
       return;
     }
 
-    // แคปเจอร์รูปถ่ายพนักงาน (ทำเฉพาะสแกนครั้งที่ 1 เพื่อประหยัดพื้นที่ Database)
     let photoBase64 = '';
     if (this.regCounter === 0) {
       const canvas = document.createElement('canvas');
-      const scale = 250 / Math.max(video.videoWidth, video.videoHeight); // เพิ่มความละเอียดรูปถ่าย (เดิม 150 เป็น 250) เพื่อให้เวลาซูมดูชัดขึ้น
+      const scale = 250 / Math.max(video.videoWidth, video.videoHeight); 
       canvas.width = video.videoWidth * scale;
       canvas.height = video.videoHeight * scale;
       const ctx = canvas.getContext('2d');
@@ -1570,7 +1584,6 @@ const app = {
         msg.innerHTML += '<br><b style="color: var(--primary); font-size: 1.1em; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 12px;"><i data-lucide="check-circle-2" style="width: 20px; height: 20px;"></i> ลงทะเบียนครบถ้วน ดำเนินการเสร็จสิ้น</b><span style="display: block; color: var(--text-muted); font-size: 0.9em; margin-top: 4px;">ระบบกำลังพากลับหน้าหลักอัตโนมัติ...</span>';
         lucide.createIcons({ root: msg });
         
-        // ล็อกปุ่มถาวรและเปลี่ยนสีเป็นสีเขียว
         this.setHtmlAndIcons('btn-save-face', `<i data-lucide="check-check" style="width: 22px; height: 22px;"></i> เสร็จเรียบร้อย`);
         btn.disabled = true;
         btn.classList.remove('btn-primary');
@@ -1606,7 +1619,7 @@ const app = {
     }
 
     try {
-      this.setHtmlAndIcons('scan-sys-status', '<i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 20px; height: 20px; color: var(--text-muted);"></i> 1/3 ตรวจสอบ GPS...');
+      this.setHtmlAndIcons('scan-sys-status', '<i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 20px; height: 20px; color: var(--text-muted);"></i> 1/3 ตรวจสอบเครือข่าย/GPS...');
       await this.checkGPS(gpsStatus);
     } catch(e) {
       this.setHtmlAndIcons('scan-sys-status', `<span style="color:var(--danger)"><i data-lucide="x-circle" style="width: 20px; height: 20px; vertical-align: middle;"></i> ${e.message}</span>`);
@@ -1644,14 +1657,33 @@ const app = {
 
   async checkGPS(statusEl) {
     try {
-      // ใช้ฟังก์ชันใหม่ที่กรอง GPS ที่แม่นยำแล้ว
+      const config = await fetch(this.apiUrl + '?action=getConfig').then(r => r.json());
+
+      // 1. ตรวจสอบว่ามี IP ออฟฟิศบันทึกไว้ และผู้ใช้ต่อ Wi-Fi ที่ IP ตรงกันหรือไม่
+      if (config.officeIp) {
+        try {
+          this.setHtmlAndIcons('scan-gps-status', `<i data-lucide="wifi" style="width: 16px; height: 16px;"></i> กำลังตรวจสอบ Wi-Fi...`);
+          const ipRes = await fetch('https://api.ipify.org?format=json');
+          const ipData = await ipRes.json();
+          
+          if (ipData.ip === config.officeIp) {
+            this.currentLat = config.lat || 0;
+            this.currentLng = config.lng || 0;
+            this.setHtmlAndIcons('scan-gps-status', `<i data-lucide="wifi" style="width: 16px; height: 16px;"></i> ยืนยันตำแหน่งผ่าน Wi-Fi ออฟฟิศแล้ว`);
+            return; // อนุญาตให้เช็คอินผ่านได้ทันที โดยไม่ต้องเช็ค GPS ต่อ
+          }
+        } catch(e) {
+          console.warn("ตรวจสอบ IP ไม่สำเร็จ จะลองเช็ค GPS แทน", e);
+        }
+      }
+
+      // 2. ถ้าไม่ได้ต่อ Wi-Fi ออฟฟิศ จะเช็คตำแหน่ง GPS แบบปกติ
+      this.setHtmlAndIcons('scan-gps-status', `<i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> กำลังตรวจสอบพิกัด GPS...`);
       const pos = await this.getAccurateLocation();
       this.currentLat = pos.coords.latitude;
       this.currentLng = pos.coords.longitude;
       const accuracy = Math.round(pos.coords.accuracy);
 
-      const config = await fetch(this.apiUrl + '?action=getConfig').then(r => r.json());
-      
       if (!config.lat || !config.lng || config.radius == 0) {
         this.setHtmlAndIcons('scan-gps-status', `<i data-lucide="map" style="width: 16px; height: 16px;"></i> GPS: นอกพื้นที่/ไม่จำกัด (±${accuracy}ม.)`);
         return; 
@@ -1660,12 +1692,14 @@ const app = {
       const dist = this.haversine(this.currentLat, this.currentLng, config.lat, config.lng);
       
       if (dist <= config.radius) {
-        this.setHtmlAndIcons('scan-gps-status', `<i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> GPS: อยู่ในพื้นที่ (${Math.round(dist)} เมตร, ±${accuracy}ม.)`);
+        let accWarn = accuracy > 15 ? ` <span style="color:#f59e0b;font-size:0.85em;">(สัญญาณอ่อน ±${accuracy}ม.)</span>` : ` (±${accuracy}ม.)`;
+        this.setHtmlAndIcons('scan-gps-status', `<i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> GPS: อยู่ในพื้นที่ (${Math.round(dist)} เมตร)${accWarn}`);
       } else {
-        throw new Error(`คุณอยู่นอกพื้นที่กำหนด (${Math.round(dist)} ม. / ${config.radius} ม.)`);
+        let extraMsg = accuracy > 15 ? ` <br><span style="font-size: 0.85em; color: #f59e0b;">(สัญญาณอ่อน ±${accuracy}ม. แนะนำให้ออกที่โล่ง หรือต่อ Wi-Fi ออฟฟิศ)</span>` : '';
+        throw new Error(`อยู่นอกพื้นที่กำหนด (${Math.round(dist)} ม. / ${config.radius} ม.)${extraMsg}`);
       }
     } catch(e) {
-      throw new Error(e.message || 'ตรวจสอบ GPS ล้มเหลว');
+      throw new Error(e.message || 'ตรวจสอบ GPS/เครือข่าย ล้มเหลว');
     }
   },
 
@@ -1785,17 +1819,14 @@ const app = {
     const fullImg = document.getElementById('modalFullImage');
     fullImg.src = imgUrl;
     modal.style.display = 'flex';
-    // ใช้ setTimeout เล็กน้อยเพื่อให้ display: flex ทำงานก่อน แล้วค่อยให้ opacity เปลี่ยนเพื่อสร้าง Animation
     setTimeout(() => modal.classList.add('active'), 10);
   },
 
   // ฟังก์ชันสำหรับปิดรูปภาพขนาดใหญ่
   closeImageModal(e) {
-    // ปิดเมื่อคลิกที่ฉากหลังสีดำ หรือ คลิกที่ปุ่มกากบาท
     if (e && e.target.id === 'imageModal' || (e && e.target.closest('.image-modal-close'))) {
       const modal = document.getElementById('imageModal');
       modal.classList.remove('active');
-      // รอให้ Animation เฟดออกเสร็จก่อนแล้วค่อยซ่อน element (0.3 วินาที)
       setTimeout(() => { modal.style.display = 'none'; }, 300);
     }
   },
