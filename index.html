@@ -856,18 +856,17 @@
     <div style="color: var(--text-muted); font-size: 0.95em; margin-bottom: 6px; font-weight: 600;">ตรวจพบบุคคล</div>
     <div class="modal-name" id="modal-user-name">ชื่อพนักงาน</div>
     
-    <div style="margin-bottom: 24px; font-size: 0.9em; color: var(--text-muted); background: #f1f5f9; padding: 10px; border-radius: 10px;">
+    <div style="margin-bottom: 16px; font-size: 0.9em; color: var(--text-muted); background: #f1f5f9; padding: 10px; border-radius: 10px;">
       ระยะความแม่นยำ: <span id="modal-score" style="font-weight: 700; color: var(--primary);">0.00</span>
     </div>
 
-    <div class="modal-grid">
-      <button class="btn btn-success" id="btn-clock-in" onclick="app.submitAttendance('เข้างาน')" style="padding: 14px;">
-        <i data-lucide="log-in" style="width: 20px; height: 20px;"></i> บันทึกเข้างาน
-      </button>
-      <button class="btn btn-danger" id="btn-clock-out" onclick="app.submitAttendance('เลิกงาน')" style="padding: 14px;">
-        <i data-lucide="log-out" style="width: 20px; height: 20px;"></i> บันทึกเลิกงาน
-      </button>
+    <!-- ส่วนแสดงเวลาเข้าออกของวันนี้ -->
+    <div id="modal-time-log" style="display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; display: none;"></div>
+
+    <div class="modal-grid" id="modal-action-grid" style="grid-template-columns: 1fr; margin-bottom: 12px;">
+      <!-- ปุ่มจะถูกสร้างอัตโนมัติจาก JavaScript ตามสถานะการเข้างาน -->
     </div>
+    
     <button class="btn btn-outline" style="padding: 14px; font-size: 0.95em;" onclick="app.closeModal()">
       ไม่ใช่ฉัน (ยกเลิก)
     </button>
@@ -1800,19 +1799,21 @@ const app = {
       
       let hasIn = false;
       let hasOut = false;
+      let timeIn = '-';
+      let timeOut = '-';
 
       if (Array.isArray(logs)) {
         logs.forEach(log => {
           if (log.name === name && log.date === todayStr) {
-            if (log.type === 'เข้างาน') hasIn = true;
-            if (log.type === 'เลิกงาน') hasOut = true;
+            if (log.type === 'เข้างาน') { hasIn = true; timeIn = this.formatThaiTime(log.time); }
+            if (log.type === 'เลิกงาน') { hasOut = true; timeOut = this.formatThaiTime(log.time); }
           }
         });
       }
-      return { hasIn, hasOut };
+      return { hasIn, hasOut, timeIn, timeOut };
     } catch(e) {
       console.error('Check status error:', e);
-      return { hasIn: false, hasOut: false };
+      return { hasIn: false, hasOut: false, timeIn: '-', timeOut: '-' };
     }
   },
 
@@ -1826,37 +1827,68 @@ const app = {
     document.getElementById('modal-score').innerText = `${accuracy}%`;
     document.getElementById('scan-modal').style.display = 'flex';
 
-    const btnIn = document.getElementById('btn-clock-in');
-    const btnOut = document.getElementById('btn-clock-out');
+    const btnGrid = document.getElementById('modal-action-grid');
+    const timeLog = document.getElementById('modal-time-log');
     
-    btnIn.disabled = true; btnOut.disabled = true;
-    this.setHtmlAndIcons('btn-clock-in', '<span class="loader"></span> ตรวจสอบสิทธิ์...');
-    this.setHtmlAndIcons('btn-clock-out', '<span class="loader"></span> ตรวจสอบสิทธิ์...');
-    btnIn.style.opacity = '1'; btnOut.style.opacity = '1';
+    // ตั้งสถานะกำลังตรวจสอบข้อมูลเบื้องต้น
+    btnGrid.innerHTML = `
+      <button class="btn btn-outline" disabled style="padding: 16px; opacity: 1; border-color: var(--primary); color: var(--primary); justify-content: center;">
+        <i data-lucide="loader-2" class="loader-dark" style="animation: spin 1.5s linear infinite; width: 20px; height: 20px;"></i> ตรวจสอบสถานะวันนี้...
+      </button>
+    `;
+    timeLog.style.display = 'none';
+    lucide.createIcons({ root: btnGrid });
 
     const status = await this.checkTodayStatus(name);
 
+    // สร้าง UI สำหรับแสดงเวลา
+    let timeHtml = '';
     if (status.hasIn) {
-      this.setHtmlAndIcons('btn-clock-in', '<i data-lucide="check-circle-2" style="width: 20px; height: 20px;"></i> เข้างานแล้ว');
-      btnIn.disabled = true;
-      btnIn.style.opacity = '0.5';
-    } else {
-      this.setHtmlAndIcons('btn-clock-in', '<i data-lucide="log-in" style="width: 20px; height: 20px;"></i> บันทึกเข้างาน');
-      btnIn.disabled = false;
+      timeHtml += `
+        <div style="flex: 1; background: rgba(16,185,129,0.08); padding: 12px; border-radius: 12px; border: 1px solid rgba(16,185,129,0.2); text-align: center;">
+          <div style="font-size: 0.85em; color: var(--success); margin-bottom: 2px; font-weight: 600;">เวลาเข้างาน</div>
+          <div style="font-weight: 700; font-size: 1.15em; color: #0f172a;">${status.timeIn}</div>
+        </div>
+      `;
     }
-
     if (status.hasOut) {
-      this.setHtmlAndIcons('btn-clock-out', '<i data-lucide="check-circle-2" style="width: 20px; height: 20px;"></i> เลิกงานแล้ว');
-      btnOut.disabled = true;
-      btnOut.style.opacity = '0.5';
-    } else {
-      this.setHtmlAndIcons('btn-clock-out', '<i data-lucide="log-out" style="width: 20px; height: 20px;"></i> บันทึกเลิกงาน');
-      btnOut.disabled = false;
+      timeHtml += `
+        <div style="flex: 1; background: rgba(245,158,11,0.08); padding: 12px; border-radius: 12px; border: 1px solid rgba(245,158,11,0.2); text-align: center;">
+          <div style="font-size: 0.85em; color: var(--warning); margin-bottom: 2px; font-weight: 600;">เวลาเลิกงาน</div>
+          <div style="font-weight: 700; font-size: 1.15em; color: #0f172a;">${status.timeOut}</div>
+        </div>
+      `;
     }
 
-    if (status.hasIn && status.hasOut) {
-      document.getElementById('modal-score').innerText = `${accuracy}% (บันทึกครบแล้วสำหรับวันนี้)`;
+    if (timeHtml !== '') {
+      timeLog.innerHTML = timeHtml;
+      timeLog.style.display = 'flex';
+    } else {
+      timeLog.style.display = 'none';
     }
+
+    // แสดงปุ่มแบบ "ปุ่มเดียว" อ้างอิงตามสถานะของวันนั้นๆ
+    if (!status.hasIn) {
+      btnGrid.innerHTML = `
+        <button class="btn btn-success" id="btn-clock-in" onclick="app.submitAttendance('เข้างาน')" style="padding: 16px; font-size: 1.1em;">
+          <i data-lucide="log-in" style="width: 22px; height: 22px;"></i> บันทึกเข้างาน
+        </button>
+      `;
+    } else if (status.hasIn && !status.hasOut) {
+      btnGrid.innerHTML = `
+        <button class="btn btn-danger" id="btn-clock-out" onclick="app.submitAttendance('เลิกงาน')" style="padding: 16px; font-size: 1.1em;">
+          <i data-lucide="log-out" style="width: 22px; height: 22px;"></i> บันทึกเลิกงาน
+        </button>
+      `;
+    } else if (status.hasIn && status.hasOut) {
+      btnGrid.innerHTML = `
+        <button class="btn btn-outline" disabled style="padding: 16px; font-size: 1.05em; background: rgba(16,185,129,0.05); color: var(--success); border-color: var(--success); opacity: 1;">
+          <i data-lucide="check-check" style="width: 22px; height: 22px;"></i> คุณได้บันทึกเวลาครบแล้ว
+        </button>
+      `;
+    }
+    
+    lucide.createIcons({ root: btnGrid });
   },
 
   closeModal() {
@@ -1889,10 +1921,15 @@ const app = {
   async submitAttendance(typeStr) {
     const btnIn = document.getElementById('btn-clock-in');
     const btnOut = document.getElementById('btn-clock-out');
-    btnIn.disabled = true; btnOut.disabled = true;
     
-    if(typeStr === 'เข้างาน') this.setHtmlAndIcons('btn-clock-in', '<span class="loader"></span> กำลังบันทึก...');
-    else this.setHtmlAndIcons('btn-clock-out', '<span class="loader"></span> กำลังบันทึก...');
+    if(btnIn) {
+      btnIn.disabled = true;
+      this.setHtmlAndIcons('btn-clock-in', '<i data-lucide="loader-2" class="loader-dark" style="animation: spin 1.5s linear infinite; width: 22px; height: 22px; border-color: transparent; border-top-color: white;"></i> กำลังบันทึก...');
+    }
+    if(btnOut) {
+      btnOut.disabled = true;
+      this.setHtmlAndIcons('btn-clock-out', '<i data-lucide="loader-2" class="loader-dark" style="animation: spin 1.5s linear infinite; width: 22px; height: 22px; border-color: transparent; border-top-color: white;"></i> กำลังบันทึก...');
+    }
 
     try {
       await fetch(this.apiUrl, {
@@ -1900,7 +1937,6 @@ const app = {
         body: JSON.stringify({ action: 'logAttendance', name: this.matchedName, type: typeStr, lat: this.currentLat, lng: this.currentLng })
       });
       
-      // เปลี่ยนจาก alert ธรรมดาเป็น SweetAlert2
       await Swal.fire({ 
         icon: 'success', 
         title: 'บันทึกสำเร็จ!', 
