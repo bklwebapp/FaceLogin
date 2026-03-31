@@ -354,6 +354,16 @@
       background: #f8fafc;
     }
 
+    /* ไฮไลท์คำค้นหา (Search Highlight) */
+    .highlight-search {
+      background-color: #fef08a; /* สีเหลืองอ่อน */
+      color: #b45309; /* สีส้มเข้ม */
+      padding: 0 2px;
+      border-radius: 4px;
+      font-weight: 700;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
     /* SweetAlert2 Custom Style ให้เข้ากับธีม */
     .swal2-popup {
       font-family: 'Sarabun', sans-serif !important;
@@ -1206,6 +1216,18 @@ const app = {
     return timeStr;
   },
 
+  // ฟังก์ชันใหม่: ใช้สำหรับไฮไลท์ข้อความที่ถูกค้นหา
+  highlightText(text, keywords) {
+    if (!text || !keywords || keywords.length === 0) return text;
+    // เรียงคำค้นหาจากยาวไปสั้น เพื่อไม่ให้คำสั้นไปตัดหน้าคำยาวตอน Replace
+    const sortedKeywords = [...keywords].sort((a, b) => b.length - a.length);
+    // แปลงตัวอักษรพิเศษใน Regex เพื่อป้องกัน Error
+    const escapedKeywords = sortedKeywords.map(kw => kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    // สร้างรูปแบบการจับคำ แบบไม่สนตัวพิมพ์เล็ก-ใหญ่ (gi)
+    const regex = new RegExp(`(${escapedKeywords.join('|')})`, 'gi');
+    return String(text).replace(regex, '<span class="highlight-search">$1</span>');
+  },
+
   setHtmlAndIcons(elId, htmlStr) {
     const el = document.getElementById(elId);
     if(el) {
@@ -1965,17 +1987,26 @@ const app = {
   renderWorkHistoryList() {
     const container = document.getElementById('history-cards-container');
     const paginationContainer = document.getElementById('history-pagination-container');
-    const keyword = (document.getElementById('history-search-keyword').value || '').trim().toLowerCase();
+    const rawKeyword = (document.getElementById('history-search-keyword').value || '').trim();
+    
+    // แยกคำค้นหาด้วยช่องว่าง (Space) เพื่อให้หาคำที่ไม่ติดกันได้
+    const keywords = rawKeyword.toLowerCase().split(/\s+/).filter(k => k.length > 0);
 
     let filteredDates = this.historySortedDates;
     
-    // 1. ฟิลเตอร์ข้อมูลตาม Search Keyword
-    if (keyword) {
+    // 1. ฟิลเตอร์ข้อมูลตาม Search Keywords (ต้องเจอครบทุกคำที่พิมพ์)
+    if (keywords.length > 0) {
       filteredDates = this.historySortedDates.filter(dateStr => {
         const dayData = this.historyData[dateStr];
         const reportText = (dayData.report || '').toLowerCase();
         const workerNames = Object.keys(dayData.workers).join(' ').toLowerCase();
-        return reportText.includes(keyword) || workerNames.includes(keyword) || dateStr.includes(keyword);
+        const thaiDate = this.formatThaiDate(dateStr).toLowerCase();
+        
+        // นำข้อมูลที่มองเห็นได้มารวมกัน (เอา dateStr ที่เป็น format ตัวเลขเช่น 25/03/2026 ออก เพื่อป้องกันการเจอตัวเลขแอบแฝง)
+        const searchPool = `${thaiDate} ${reportText} ${workerNames}`;
+        
+        // เช็คว่า "ทุกคำ (every)" ที่พิมพ์ค้นหา มีอยู่ใน searchPool หรือไม่
+        return keywords.every(kw => searchPool.includes(kw));
       });
     }
 
@@ -1998,17 +2029,25 @@ const app = {
       return;
     }
 
-    // 3. แสดงผลเฉพาะรายการในหน้านั้นๆ
+    // 3. แสดงผลเฉพาะรายการในหน้านั้นๆ พร้อมทำไฮไลท์
     paginatedDates.forEach(dateStr => {
       const dayData = this.historyData[dateStr];
       const workerCount = Object.keys(dayData.workers).length;
       
-      let snippet = '<span style="color:#94a3b8; font-style:italic;">ไม่มีรายละเอียดงานที่บันทึกไว้</span>';
+      let snippet = 'ไม่มีรายละเอียดงานที่บันทึกไว้';
       if (dayData.report) {
-        snippet = dayData.report; // ใช้ CSS ตัดบรรทัด
+        snippet = dayData.report;
       }
       
-      const thaiDate = this.formatThaiDate(dateStr);
+      let displayDate = this.formatThaiDate(dateStr);
+
+      // ทำการไฮไลท์คำ ถ้ามีการค้นหา
+      if (keywords.length > 0) {
+        snippet = this.highlightText(snippet, keywords);
+        displayDate = this.highlightText(displayDate, keywords);
+      } else if (!dayData.report) {
+        snippet = `<span style="color:#94a3b8; font-style:italic;">${snippet}</span>`;
+      }
 
       const card = document.createElement('div');
       card.className = 'card-panel';
@@ -2020,12 +2059,13 @@ const app = {
       card.style.transition = 'all 0.2s ease';
       card.onmouseover = () => { card.style.transform = 'translateY(-4px)'; card.style.borderColor = 'var(--primary)'; card.style.boxShadow = '0 12px 24px -4px rgba(79,70,229,0.15)'; };
       card.onmouseout = () => { card.style.transform = 'translateY(0)'; card.style.borderColor = 'var(--border-color)'; card.style.boxShadow = '0 4px 12px -2px rgba(0,0,0,0.03)'; };
-      card.onclick = () => this.showHistoryDetail(dateStr);
+      // ส่ง keywords ไปให้หน้ารายละเอียดเพื่อไฮไลท์ต่อด้วย
+      card.onclick = () => this.showHistoryDetail(dateStr, keywords);
       
       card.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
           <div style="font-weight: 700; font-size: 1.15em; color: var(--primary); display: flex; align-items: center; gap: 8px;">
-            <i data-lucide="calendar-days" style="width:20px;height:20px;"></i> ${thaiDate}
+            <i data-lucide="calendar-days" style="width:20px;height:20px;"></i> ${displayDate}
           </div>
           <div style="background: rgba(16,185,129,0.15); color: #059669; padding: 6px 14px; border-radius: 20px; font-size: 0.9em; font-weight: 700; display: flex; align-items: center; gap: 6px;">
             <i data-lucide="users" style="width:16px;height:16px;"></i> ${workerCount} คน
@@ -2081,26 +2121,30 @@ const app = {
   goToHistoryPage(page) {
     this.historyCurrentPage = page;
     this.renderWorkHistoryList();
+    // Scroll กลับไปด้านบนของช่องรายการอัตโนมัติ
     const listTop = document.getElementById('history-list-view').getBoundingClientRect().top + window.scrollY - 80;
     window.scrollTo({ top: listTop, behavior: 'smooth' });
   },
 
+  // นำ parameter keywords ออก และเอาการทำไฮไลท์ในหน้านี้ออกทั้งหมด
   showHistoryDetail(dateStr) {
     document.getElementById('history-list-view').style.display = 'none';
     document.getElementById('history-detail-view').style.display = 'block';
     
-    const thaiDate = this.formatThaiDate(dateStr);
+    let thaiDate = this.formatThaiDate(dateStr);
+    let reportText = this.historyData[dateStr].report || 'ไม่มีรายละเอียดการทำงานบันทึกไว้ในระบบ';
+
     this.setHtmlAndIcons('history-detail-title', `<i data-lucide="calendar" style="width:28px;height:28px;"></i> ประจำวันที่ ${thaiDate}`);
     
     const dayData = this.historyData[dateStr];
     const detailTextEl = document.getElementById('history-detail-text');
     
+    detailTextEl.innerHTML = reportText; 
+    
     if(dayData.report) {
-      detailTextEl.innerText = dayData.report;
       detailTextEl.style.color = 'var(--text-main)';
       detailTextEl.style.fontStyle = 'normal';
     } else {
-      detailTextEl.innerText = 'ไม่มีรายละเอียดการทำงานบันทึกไว้ในระบบ';
       detailTextEl.style.color = 'var(--text-muted)';
       detailTextEl.style.fontStyle = 'italic';
     }
@@ -2114,12 +2158,14 @@ const app = {
     } else {
       workers.forEach((name, index) => {
         const times = dayData.workers[name];
+        let displayName = name;
+
         const tr = document.createElement('tr');
         const inClass = times.in !== '-' ? 'type-in' : '';
         const outClass = times.out !== '-' ? 'type-out' : '';
         tr.innerHTML = `
           <td style="text-align: center; color: var(--text-muted); font-weight: 600;">${index + 1}</td>
-          <td style="font-weight: 600; color: #1e293b; font-size: 1.05em;">${name}</td>
+          <td style="font-weight: 600; color: #1e293b; font-size: 1.05em;">${displayName}</td>
           <td class="${inClass}">${this.formatThaiTime(times.in)}</td>
           <td class="${outClass}">${this.formatThaiTime(times.out)}</td>
         `;
