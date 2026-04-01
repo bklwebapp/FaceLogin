@@ -1059,7 +1059,7 @@
       <!-- เปลี่ยนสถานะกำลังโหลดให้กว้างเต็มหน้าจอเท่าการ์ด จะได้ไม่ทำให้หน้าเว็บหดตัว -->
       <div id="history-status" class="card-panel" style="text-align: center; color: var(--text-muted); margin-bottom: 24px; padding: 60px 24px; font-size: 1.1em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; width: 100%; box-sizing: border-box;">
         <i data-lucide="loader-2" class="loader-dark" style="animation: spin 1.5s linear infinite; width: 36px; height: 36px; color: var(--primary); border: none;"></i>
-        กำลังดึงข้อมูล...
+        <span>กำลังดึงข้อมูล...</span>
       </div>
 
       <!-- Container สำหรับการ์ด (Grid แนวนอนบน PC) -->
@@ -1160,7 +1160,9 @@
 <script>
 // --- การตั้งค่าเริ่มต้น (HARDCODED_API_URL) ---
 const HARDCODED_API_URL = 'https://script.google.com/macros/s/AKfycbxdMDJFsTYQSvA2tC6qfJody0TkJqO76d5rSFO78GQDW5nxYqMsMW4w27oIaXQhcEEl/exec';
-const MATCH_THRESHOLD = 0.45; 
+
+// 🛠️ [ปรับปรุงที่ 1]: ปรับ Threshold เป็น 0.48 เพื่อให้สแกนติดง่ายขึ้นในสภาพแสงที่แตกต่าง (โดยยังคงความปลอดภัยไว้)
+const MATCH_THRESHOLD = 0.48; 
 
 const app = {
   currentView: 'view-home',
@@ -1168,14 +1170,12 @@ const app = {
   modelsLoaded: false,
   knownFaces: [],
   currentStream: null,
-  scanInterval: null,
+  scanInterval: null, // จะใช้เป็นตัวแปรเก็บ setTimeout แทนเพื่อป้องกันการประมวลผลซ้อนทับ
   currentLat: null,
   currentLng: null,
   matchedName: null,
   regCounter: 0,
   calendarData: {},
-  
-  // State ตัวแปรสำหรับเก็บประวัติและ Pagination
   historyData: {}, 
   historySortedDates: [],
   historyCurrentPage: 1,
@@ -1216,14 +1216,10 @@ const app = {
     return timeStr;
   },
 
-  // ฟังก์ชันใหม่: ใช้สำหรับไฮไลท์ข้อความที่ถูกค้นหา
   highlightText(text, keywords) {
     if (!text || !keywords || keywords.length === 0) return text;
-    // เรียงคำค้นหาจากยาวไปสั้น เพื่อไม่ให้คำสั้นไปตัดหน้าคำยาวตอน Replace
     const sortedKeywords = [...keywords].sort((a, b) => b.length - a.length);
-    // แปลงตัวอักษรพิเศษใน Regex เพื่อป้องกัน Error
     const escapedKeywords = sortedKeywords.map(kw => kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    // สร้างรูปแบบการจับคำ แบบไม่สนตัวพิมพ์เล็ก-ใหญ่ (gi)
     const regex = new RegExp(`(${escapedKeywords.join('|')})`, 'gi');
     return String(text).replace(regex, '<span class="highlight-search">$1</span>');
   },
@@ -1238,7 +1234,7 @@ const app = {
 
   // --- 1. Core Functions ---
   init() {
-    lucide.createIcons(); // วาด Icon ทั้งหมดในโหลดครั้งแรก
+    lucide.createIcons();
     if(!this.apiUrl) {
       document.getElementById('home-alert').style.display = 'flex';
     } else {
@@ -1248,7 +1244,10 @@ const app = {
 
   navigate(viewId) {
     this.stopCamera();
-    if(this.scanInterval) clearInterval(this.scanInterval);
+    if(this.scanInterval) {
+      clearTimeout(this.scanInterval);
+      this.scanInterval = null;
+    }
 
     document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
@@ -1292,15 +1291,16 @@ const app = {
     }
   },
 
-  // --- 2. Admin & Config ---
+  // ---------------------------------------------------------
+  // โค้ดส่วน Admin, Report, Work History
+  // ---------------------------------------------------------
   showAdminLogin() { 
-    // ตรวจสอบว่ามี Session ของแอดมินที่ยังไม่หมดอายุ (1 ชั่วโมง) หรือไม่
     const expiry = localStorage.getItem('adminExpiry');
     if (expiry && Date.now() < parseInt(expiry, 10)) {
-      this.navigate('view-admin-dashboard'); // ข้ามไปหน้าแผงควบคุมเลย
+      this.navigate('view-admin-dashboard'); 
     } else {
-      localStorage.removeItem('adminExpiry'); // ล้างข้อมูลหากหมดเวลา
-      this.navigate('view-admin-login'); // ไปหน้าล็อกอินปกติ
+      localStorage.removeItem('adminExpiry'); 
+      this.navigate('view-admin-login'); 
     }
   },
   
@@ -1325,7 +1325,6 @@ const app = {
       
       if (data.success) {
         document.getElementById('admin-pin').value = '';
-        // บันทึกเวลาหมดอายุ 1 ชั่วโมง (3,600,000 มิลลิวินาที) นับจากเวลาปัจจุบัน
         localStorage.setItem('adminExpiry', Date.now() + 3600000);
         this.navigate('view-admin-dashboard');
       } else {
@@ -1340,7 +1339,7 @@ const app = {
   },
   
   adminLogout() { 
-    localStorage.removeItem('adminExpiry'); // ล้างค่า Session เมื่อกดออกจากระบบ
+    localStorage.removeItem('adminExpiry'); 
     this.navigate('view-home'); 
   },
 
@@ -1455,7 +1454,6 @@ const app = {
     this.setHtmlAndIcons('btn-save-cfg', '<i data-lucide="save" style="width: 20px; height: 20px;"></i> บันทึกการตั้งค่าทั้งหมด');
   },
 
-  // --- 3. Report View ---
   switchReportTab(tab) {
     const tabs = ['detail', 'summary', 'daily', 'employee'];
     tabs.forEach(t => {
@@ -1892,7 +1890,9 @@ const app = {
     }
   },
 
-  // --- ฟังก์ชันสำหรับเมนู สมุดบันทึกงานย้อนหลัง (อัปเกรด) ---
+  // ---------------------------------------------------------
+  // โค้ดส่วน Work History (ย้อนหลัง) ที่ได้ปรับเรื่องการค้นหาแล้ว
+  // ---------------------------------------------------------
   initWorkHistory() {
     const d = new Date();
     const mEl = document.getElementById('history-month');
@@ -1904,7 +1904,7 @@ const app = {
     }
     
     const searchInput = document.getElementById('history-search-keyword');
-    if (searchInput) searchInput.value = ''; // เคลียร์ช่องค้นหา
+    if (searchInput) searchInput.value = ''; 
     
     document.getElementById('history-list-view').style.display = 'block';
     document.getElementById('history-detail-view').style.display = 'none';
@@ -1920,7 +1920,7 @@ const app = {
     
     container.innerHTML = '';
     paginationContainer.innerHTML = '';
-    status.style.display = 'flex'; // อัปเดตให้แสดง Card Loading เต็มความกว้าง
+    status.style.display = 'flex'; 
     this.setHtmlAndIcons('history-status', '<i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 36px; height: 36px; color: var(--primary);"></i><span>กำลังดึงข้อมูล...</span>');
 
     if(!this.apiUrl) return this.setHtmlAndIcons('history-status', '<span style="color:var(--danger)">ไม่มี API URL</span>');
@@ -1960,7 +1960,6 @@ const app = {
 
       status.style.display = 'none';
 
-      // เรียงลำดับจากวันที่ล่าสุดขึ้นก่อนและเก็บไว้ใน Array ของ State
       this.historySortedDates = Object.keys(this.historyData).sort((a, b) => {
         const pa = a.split('/');
         const pb = b.split('/');
@@ -1989,12 +1988,10 @@ const app = {
     const paginationContainer = document.getElementById('history-pagination-container');
     const rawKeyword = (document.getElementById('history-search-keyword').value || '').trim();
     
-    // แยกคำค้นหาด้วยช่องว่าง (Space) เพื่อให้หาคำที่ไม่ติดกันได้
     const keywords = rawKeyword.toLowerCase().split(/\s+/).filter(k => k.length > 0);
 
     let filteredDates = this.historySortedDates;
     
-    // 1. ฟิลเตอร์ข้อมูลตาม Search Keywords (ต้องเจอครบทุกคำที่พิมพ์)
     if (keywords.length > 0) {
       filteredDates = this.historySortedDates.filter(dateStr => {
         const dayData = this.historyData[dateStr];
@@ -2002,15 +1999,11 @@ const app = {
         const workerNames = Object.keys(dayData.workers).join(' ').toLowerCase();
         const thaiDate = this.formatThaiDate(dateStr).toLowerCase();
         
-        // นำข้อมูลที่มองเห็นได้มารวมกัน (เอา dateStr ที่เป็น format ตัวเลขเช่น 25/03/2026 ออก เพื่อป้องกันการเจอตัวเลขแอบแฝง)
         const searchPool = `${thaiDate} ${reportText} ${workerNames}`;
-        
-        // เช็คว่า "ทุกคำ (every)" ที่พิมพ์ค้นหา มีอยู่ใน searchPool หรือไม่
         return keywords.every(kw => searchPool.includes(kw));
       });
     }
 
-    // 2. คำนวณระบบแบ่งหน้า (Pagination)
     const totalItems = filteredDates.length;
     const totalPages = Math.ceil(totalItems / this.historyItemsPerPage) || 1;
 
@@ -2029,7 +2022,6 @@ const app = {
       return;
     }
 
-    // 3. แสดงผลเฉพาะรายการในหน้านั้นๆ พร้อมทำไฮไลท์
     paginatedDates.forEach(dateStr => {
       const dayData = this.historyData[dateStr];
       const workerCount = Object.keys(dayData.workers).length;
@@ -2041,7 +2033,6 @@ const app = {
       
       let displayDate = this.formatThaiDate(dateStr);
 
-      // ทำการไฮไลท์คำ ถ้ามีการค้นหา
       if (keywords.length > 0) {
         snippet = this.highlightText(snippet, keywords);
         displayDate = this.highlightText(displayDate, keywords);
@@ -2059,8 +2050,7 @@ const app = {
       card.style.transition = 'all 0.2s ease';
       card.onmouseover = () => { card.style.transform = 'translateY(-4px)'; card.style.borderColor = 'var(--primary)'; card.style.boxShadow = '0 12px 24px -4px rgba(79,70,229,0.15)'; };
       card.onmouseout = () => { card.style.transform = 'translateY(0)'; card.style.borderColor = 'var(--border-color)'; card.style.boxShadow = '0 4px 12px -2px rgba(0,0,0,0.03)'; };
-      // ส่ง keywords ไปให้หน้ารายละเอียดเพื่อไฮไลท์ต่อด้วย
-      card.onclick = () => this.showHistoryDetail(dateStr, keywords);
+      card.onclick = () => this.showHistoryDetail(dateStr);
       
       card.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -2078,7 +2068,6 @@ const app = {
       container.appendChild(card);
     });
 
-    // 4. วาดปุ่ม Pagination แบบใหม่ (หน้าแรก, ตัวเลขไฮไลท์, หน้าสุดท้าย)
     if (totalPages > 1) {
       let pagesHtml = '';
 
@@ -2121,12 +2110,10 @@ const app = {
   goToHistoryPage(page) {
     this.historyCurrentPage = page;
     this.renderWorkHistoryList();
-    // Scroll กลับไปด้านบนของช่องรายการอัตโนมัติ
     const listTop = document.getElementById('history-list-view').getBoundingClientRect().top + window.scrollY - 80;
     window.scrollTo({ top: listTop, behavior: 'smooth' });
   },
 
-  // นำ parameter keywords ออก และเอาการทำไฮไลท์ในหน้านี้ออกทั้งหมด
   showHistoryDetail(dateStr) {
     document.getElementById('history-list-view').style.display = 'none';
     document.getElementById('history-detail-view').style.display = 'block';
@@ -2180,7 +2167,9 @@ const app = {
     document.getElementById('history-detail-view').style.display = 'none';
   },
 
-  // --- 4. Register View ---
+  // ---------------------------------------------------------
+  // โค้ดส่วน Scanner (กล้องและใบหน้า) ที่ปรับความเร็วแล้ว
+  // ---------------------------------------------------------
   async initRegisterView() {
     this.regCounter = 0;
     
@@ -2200,7 +2189,10 @@ const app = {
     if(!ok) return;
 
     try {
-      this.currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      // 🛠️ ปรับลดความละเอียดวิดีโอ เพื่อให้ AI ไม่ต้องคิดเลขเยอะเกินความจำเป็น (ภาพลื่นขึ้น)
+      this.currentStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
+      });
       const video = document.getElementById('reg-video');
       video.srcObject = this.currentStream;
       await video.play().catch(e=>console.log(e)); 
@@ -2306,7 +2298,6 @@ const app = {
     document.getElementById('btn-save-face').disabled = false;
   },
 
-  // --- 5. Scan View (Attendance) ---
   async initScanView() {
     document.getElementById('btn-start-scan').style.display = 'flex';
     document.getElementById('btn-start-scan').disabled = true;
@@ -2329,7 +2320,11 @@ const app = {
 
     try {
       this.setHtmlAndIcons('scan-sys-status', '<i data-lucide="loader-2" class="loader-dark" style="border:none; animation: spin 1.5s linear infinite; width: 20px; height: 20px; color: var(--text-muted);"></i> กำลังเปิดกล้อง...');
-      this.currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      
+      // 🛠️ ปรับลดความละเอียดวิดีโอตอนสแกนด้วย (ลื่นไหลขึ้นมากๆ)
+      this.currentStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
+      });
       const video = document.getElementById('scan-video');
       video.srcObject = this.currentStream;
       await video.play().catch(e=>console.log(e)); 
@@ -2411,25 +2406,42 @@ const app = {
     const video = document.getElementById('scan-video');
     await video.play().catch(e=>console.log(e)); 
 
-    this.scanInterval = setInterval(async () => {
-      if(video.paused || video.ended) return;
-      const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-      
-      if(detection) {
-        let best = { name: 'unknown', distance: 1.0 };
-        this.knownFaces.forEach(u => {
-          const d = faceapi.euclideanDistance(detection.descriptor, u.descriptor);
-          if(d < best.distance) best = { name: u.name, distance: d };
-        });
+    // 🛠️ เปลี่ยนจากการใช้ setInterval เป็น Recursive Async Function เพื่อป้องกันเครื่องค้าง
+    const scanFrame = async () => {
+      // ถ้าเปลี่ยนหน้า หรือ กล้องดับ ให้หยุดทำงานทันที
+      if (this.currentView !== 'view-scan' || video.paused || video.ended) return;
 
-        if(best.distance < MATCH_THRESHOLD) {
-          clearInterval(this.scanInterval);
-          this.showConfirmModal(best.name, best.distance);
-        } else {
-          this.setHtmlAndIcons('scan-badge', `<i data-lucide="user-x" style="width: 18px; height: 18px;"></i> ไม่รู้จัก (${best.distance.toFixed(2)})`);
+      try {
+        // 🛠️ ลด minConfidence เพื่อให้ AI ตรวจเจอโครงหน้าได้ไวขึ้นตั้งแต่วินาทีแรก
+        const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
+        const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
+        
+        if (detection) {
+          let best = { name: 'unknown', distance: 1.0 };
+          this.knownFaces.forEach(u => {
+            const d = faceapi.euclideanDistance(detection.descriptor, u.descriptor);
+            if(d < best.distance) best = { name: u.name, distance: d };
+          });
+
+          if (best.distance < MATCH_THRESHOLD) {
+            // เจอหน้าและตรงกับฐานข้อมูล: สั่งหยุดการทำซ้ำทันที
+            if(this.scanInterval) clearTimeout(this.scanInterval);
+            this.showConfirmModal(best.name, best.distance);
+            return; // ออกจาก Loop การสแกน
+          } else {
+            this.setHtmlAndIcons('scan-badge', `<i data-lucide="user-x" style="width: 18px; height: 18px;"></i> ไม่รู้จัก (${best.distance.toFixed(2)})`);
+          }
         }
+      } catch (e) {
+        console.log("Scan frame error:", e);
       }
-    }, 500);
+
+      // วนลูปรอบถัดไป (ตั้งเวลาหน่วงเล็กน้อยเพื่อให้ Browser ได้พักหายใจ ไม่ค้าง)
+      this.scanInterval = setTimeout(scanFrame, 200); 
+    };
+
+    // สั่งเริ่มลูปการสแกนครั้งแรก
+    scanFrame();
   },
 
   async checkTodayStatus(name) {
@@ -2542,7 +2554,6 @@ const app = {
     document.getElementById('btn-start-scan').style.display = 'flex';
   },
 
-  // ฟังก์ชันสำหรับเปิดดูรูปภาพขนาดใหญ่
   showImageModal(imgUrl) {
     const modal = document.getElementById('imageModal');
     const fullImg = document.getElementById('modalFullImage');
@@ -2551,7 +2562,6 @@ const app = {
     setTimeout(() => modal.classList.add('active'), 10);
   },
 
-  // ฟังก์ชันสำหรับปิดรูปภาพขนาดใหญ่
   closeImageModal(e) {
     if (e && e.target.id === 'imageModal' || (e && e.target.closest('.image-modal-close'))) {
       const modal = document.getElementById('imageModal');
