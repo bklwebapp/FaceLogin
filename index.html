@@ -442,7 +442,6 @@
         border: 1px solid #ccc !important; 
         padding: 12px !important; 
         color: #000 !important; 
-        /* ล้างการตั้งค่า nowrap เดิมทิ้ง เพื่อให้ข้อความตัดขึ้นบรรทัดใหม่ได้ ป้องกันตารางล้นหน้ากระดาษ */
         white-space: normal !important; 
         word-wrap: break-word !important;
       }
@@ -506,7 +505,6 @@
        ========================================================= -->
   <div id="view-home" class="view active">
     <div class="header">
-      <!-- Custom SVG Icon รูปทรงอาคารสำนักงานราชการ ตามภาพอ้างอิง -->
       <svg viewBox="0 0 100 100" class="header-icon-svg">
         <defs>
           <linearGradient id="govGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -514,67 +512,16 @@
             <stop offset="100%" stop-color="#4f46e5" />
           </linearGradient>
         </defs>
-        
-        <!-- โครงสร้างตึกหลัก -->
         <path d="M22 5 h56 v40 h17 v50 h-90 v-50 h17 z" fill="url(#govGradient)" />
-
-        <!-- ส่วนเจาะทะลุ (หน้าต่างและประตู) -->
         <g fill="var(--bg-main)">
-          <!-- หน้าต่างตึกสูงส่วนกลาง (4 แถว x 4 คอลัมน์) -->
-          <rect x="28" y="12" width="8" height="6" rx="0.5" />
-          <rect x="40" y="12" width="8" height="6" rx="0.5" />
-          <rect x="52" y="12" width="8" height="6" rx="0.5" />
-          <rect x="64" y="12" width="8" height="6" rx="0.5" />
-
-          <rect x="28" y="21" width="8" height="6" rx="0.5" />
-          <rect x="40" y="21" width="8" height="6" rx="0.5" />
-          <rect x="52" y="21" width="8" height="6" rx="0.5" />
-          <rect x="64" y="21" width="8" height="6" rx="0.5" />
-
-          <rect x="28" y="30" width="8" height="6" rx="0.5" />
-          <rect x="40" y="30" width="8" height="6" rx="0.5" />
-          <rect x="52" y="30" width="8" height="6" rx="0.5" />
-          <rect x="64" y="30" width="8" height="6" rx="0.5" />
-
-          <rect x="28" y="39" width="8" height="6" rx="0.5" />
-          <rect x="40" y="39" width="8" height="6" rx="0.5" />
-          <rect x="52" y="39" width="8" height="6" rx="0.5" />
-          <rect x="64" y="39" width="8" height="6" rx="0.5" />
-
-          <!-- หน้าต่างฐานตึกชั้นล่าง (3 แถว x 8 คอลัมน์) -->
-          <rect x="10" y="52" width="8" height="6" rx="0.5" />
-          <rect x="20" y="52" width="8" height="6" rx="0.5" />
-          <rect x="30" y="52" width="8" height="6" rx="0.5" />
-          <rect x="40" y="52" width="8" height="6" rx="0.5" />
-          <rect x="52" y="52" width="8" height="6" rx="0.5" />
-          <rect x="62" y="52" width="8" height="6" rx="0.5" />
-          <rect x="72" y="52" width="8" height="6" rx="0.5" />
-          <rect x="82" y="52" width="8" height="6" rx="0.5" />
-
-          <rect x="10" y="62" width="8" height="6" rx="0.5" />
-          <rect x="20" y="62" width="8" height="6" rx="0.5" />
-          <rect x="30" y="62" width="8" height="6" rx="0.5" />
-          <rect x="40" y="62" width="8" height="6" rx="0.5" />
-          <rect x="52" y="62" width="8" height="6" rx="0.5" />
-          <rect x="62" y="62" width="8" height="6" rx="0.5" />
-          <rect x="72" y="62" width="8" height="6" rx="0.5" />
-          <rect x="82" y="62" width="8" height="6" rx="0.5" />
-
-          <rect x="10" y="72" width="8" height="6" rx="0.5" />
-          <rect x="20" y="72" width="8" height="6" rx="0.5" />
-          <rect x="30" y="72" width="8" height="6" rx="0.5" />
-          <rect x="40" y="72" width="8" height="6" rx="0.5" />
-          <rect x="52" y="72" width="8" height="6" rx="0.5" />
-          <rect x="62" y="72" width="8" height="6" rx="0.5" />
-          <rect x="72" y="72" width="8" height="6" rx="0.5" />
-          <rect x="82" y="72" width="8" height="6" rx="0.5" />
-
-          <!-- ประตูทางเข้าหลักและทางเดินเสาด้านข้าง -->
-          <rect x="36" y="84" width="28" height="12" rx="1" />
-          <rect x="12" y="84" width="8" height="12" rx="0.5" />
-          <rect x="24" y="84" width="8" height="12" rx="0.5" />
-          <rect x="68" y="84" width="8" height="12" rx="0.5" />
-          <rect x="80" y="84" width="8" height="12" rx="0.5" />
+          <rect x="28" y="12" width="8" height="6" rx="0.5" /> <rect x="40" y="12" width="8" height="6" rx="0.5" /> <rect x="52" y="12" width="8" height="6" rx="0.5" /> <rect x="64" y="12" width="8" height="6" rx="0.5" />
+          <rect x="28" y="21" width="8" height="6" rx="0.5" /> <rect x="40" y="21" width="8" height="6" rx="0.5" /> <rect x="52" y="21" width="8" height="6" rx="0.5" /> <rect x="64" y="21" width="8" height="6" rx="0.5" />
+          <rect x="28" y="30" width="8" height="6" rx="0.5" /> <rect x="40" y="30" width="8" height="6" rx="0.5" /> <rect x="52" y="30" width="8" height="6" rx="0.5" /> <rect x="64" y="30" width="8" height="6" rx="0.5" />
+          <rect x="28" y="39" width="8" height="6" rx="0.5" /> <rect x="40" y="39" width="8" height="6" rx="0.5" /> <rect x="52" y="39" width="8" height="6" rx="0.5" /> <rect x="64" y="39" width="8" height="6" rx="0.5" />
+          <rect x="10" y="52" width="8" height="6" rx="0.5" /> <rect x="20" y="52" width="8" height="6" rx="0.5" /> <rect x="30" y="52" width="8" height="6" rx="0.5" /> <rect x="40" y="52" width="8" height="6" rx="0.5" /> <rect x="52" y="52" width="8" height="6" rx="0.5" /> <rect x="62" y="52" width="8" height="6" rx="0.5" /> <rect x="72" y="52" width="8" height="6" rx="0.5" /> <rect x="82" y="52" width="8" height="6" rx="0.5" />
+          <rect x="10" y="62" width="8" height="6" rx="0.5" /> <rect x="20" y="62" width="8" height="6" rx="0.5" /> <rect x="30" y="62" width="8" height="6" rx="0.5" /> <rect x="40" y="62" width="8" height="6" rx="0.5" /> <rect x="52" y="62" width="8" height="6" rx="0.5" /> <rect x="62" y="62" width="8" height="6" rx="0.5" /> <rect x="72" y="62" width="8" height="6" rx="0.5" /> <rect x="82" y="62" width="8" height="6" rx="0.5" />
+          <rect x="10" y="72" width="8" height="6" rx="0.5" /> <rect x="20" y="72" width="8" height="6" rx="0.5" /> <rect x="30" y="72" width="8" height="6" rx="0.5" /> <rect x="40" y="72" width="8" height="6" rx="0.5" /> <rect x="52" y="72" width="8" height="6" rx="0.5" /> <rect x="62" y="72" width="8" height="6" rx="0.5" /> <rect x="72" y="72" width="8" height="6" rx="0.5" /> <rect x="82" y="72" width="8" height="6" rx="0.5" />
+          <rect x="36" y="84" width="28" height="12" rx="1" /> <rect x="12" y="84" width="8" height="12" rx="0.5" /> <rect x="24" y="84" width="8" height="12" rx="0.5" /> <rect x="68" y="84" width="8" height="12" rx="0.5" /> <rect x="80" y="84" width="8" height="12" rx="0.5" />
         </g>
       </svg>
       <h1 class="title">บันทึกเวลาทำงาน</h1>
@@ -751,7 +698,6 @@
         </div>
         <i data-lucide="chevron-right" style="color: #cbd5e1; width: 24px; height: 24px;"></i>
       </div>
-
     </div>
   </div>
 
@@ -797,6 +743,25 @@
         <div class="form-group">
           <label>รัศมีที่ยอมรับ (เมตร) *ใส่ 0 เพื่อปิดตรวจสอบ</label>
           <input type="number" step="1" id="cfg-rad" class="form-control" placeholder="เช่น 10 (10 เมตร)">
+        </div>
+      </div>
+
+      <!-- ส่วนตั้งค่าการรายงานผลการปฏิบัติงาน (พนักงาน) -->
+      <div class="card-panel" style="grid-column: 1 / -1;">
+        <div style="margin-bottom: 20px; font-weight: 700; font-size: 1.1em; color: var(--primary); display: flex; align-items: center; gap: 10px;">
+          <i data-lucide="file-text" style="width: 20px; height: 20px;"></i> ตั้งค่าการรายงานผลการปฏิบัติงาน (พนักงาน)
+        </div>
+        <div class="form-group">
+          <label>สิทธิ์การรายงานผลตอนสแกนเลิกงาน</label>
+          <select id="cfg-emp-report-mode" class="form-control" onchange="app.toggleEmpReportInput()">
+            <option value="none">❌ ปิดใช้งานทุกคน (ไม่แสดงช่องรายงาน)</option>
+            <option value="all">✅ เปิดให้แสดงช่องรายงานทุกคน</option>
+            <option value="custom">👤 แสดงเฉพาะบุคคลที่กำหนด...</option>
+          </select>
+        </div>
+        <div class="form-group" id="cfg-emp-report-custom-wrap" style="display: none;">
+          <label>ระบุชื่อพนักงานที่ต้องการให้มีช่องรายงานผล (คั่นด้วยลูกน้ำ , )</label>
+          <input type="text" id="cfg-emp-report-names" class="form-control" placeholder="เช่น สมชาย ใจดี, สมหญิง รักงาน">
         </div>
       </div>
 
@@ -1109,7 +1074,7 @@
         </div>
         
         <div style="margin-bottom: 12px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
-          <i data-lucide="edit-3" style="width: 22px; height: 22px; color: var(--primary);"></i> รายละเอียดการทำงาน
+          <i data-lucide="edit-3" style="width: 22px; height: 22px; color: var(--primary);"></i> รายละเอียดการทำงาน (โดยแอดมิน)
         </div>
         <div id="history-detail-text" style="background: #f8fafc; padding: 24px; border-radius: 16px; border: 1px solid var(--border-color); white-space: pre-wrap; line-height: 1.7; color: var(--text-main); margin-bottom: 40px; min-height: 100px; font-size: 1.05em;">
           ไม่มีบันทึก
@@ -1196,6 +1161,9 @@ const app = {
   regCounter: 0,
   calendarData: {},
   
+  // State สำหรับ Config
+  sysConfig: null,
+
   // State สำหรับ Auto Updater
   isAutoIpRunning: false,
   autoIpInterval: null,
@@ -1275,7 +1243,7 @@ const app = {
     }
 
     if(this.currentView === 'view-config' && viewId !== 'view-config' && this.isAutoIpRunning) {
-        this.toggleAutoUpdateIP(true); // บังคับปิดอัปเดตอัตโนมัติหากออกจากหน้า Config
+        this.toggleAutoUpdateIP(true); 
     }
 
     document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
@@ -1381,7 +1349,22 @@ const app = {
       document.getElementById('cfg-lng').value = res.lng || '';
       document.getElementById('cfg-rad').value = res.radius || '0';
       document.getElementById('cfg-ip').value = res.officeIp || '';
+      
+      const empMode = res.empReportAccess || 'none';
+      if (empMode === 'all' || empMode === 'none') {
+        document.getElementById('cfg-emp-report-mode').value = empMode;
+        document.getElementById('cfg-emp-report-names').value = '';
+      } else if (empMode.startsWith('custom:')) {
+        document.getElementById('cfg-emp-report-mode').value = 'custom';
+        document.getElementById('cfg-emp-report-names').value = empMode.replace('custom:', '');
+      }
+      this.toggleEmpReportInput();
     } catch(e) { console.error('Config fetch error', e); }
+  },
+
+  toggleEmpReportInput() {
+    const mode = document.getElementById('cfg-emp-report-mode').value;
+    document.getElementById('cfg-emp-report-custom-wrap').style.display = mode === 'custom' ? 'block' : 'none';
   },
 
   getAccurateLocation() {
@@ -1449,6 +1432,12 @@ const app = {
     const rad = document.getElementById('cfg-rad').value;
     const officeIp = document.getElementById('cfg-ip').value.trim();
     const adminPin = document.getElementById('cfg-admin-pin').value.trim();
+    
+    let empReportAccess = document.getElementById('cfg-emp-report-mode').value;
+    if (empReportAccess === 'custom') {
+      empReportAccess = 'custom:' + document.getElementById('cfg-emp-report-names').value.trim();
+    }
+    
     const msg = document.getElementById('cfg-msg');
 
     if(!api) return msg.innerHTML = '<span style="color:var(--danger)">กรุณาใส่ API URL</span>';
@@ -1463,7 +1452,7 @@ const app = {
     try {
       const res = await fetch(api, {
         method: 'POST', 
-        body: JSON.stringify({ action: 'saveConfig', lat, lng, radius: rad, officeIp: officeIp, adminPin: adminPin })
+        body: JSON.stringify({ action: 'saveConfig', lat, lng, radius: rad, officeIp: officeIp, adminPin: adminPin, empReportAccess: empReportAccess })
       });
       await res.json();
       msg.innerHTML = '<span style="color:var(--success)">บันทึกตั้งค่าเรียบร้อย</span>';
@@ -1520,10 +1509,13 @@ const app = {
          const lat = document.getElementById('cfg-lat').value;
          const lng = document.getElementById('cfg-lng').value;
          const rad = document.getElementById('cfg-rad').value;
+         const empMode = document.getElementById('cfg-emp-report-mode').value;
+         let empReportAccess = empMode;
+         if (empMode === 'custom') empReportAccess = 'custom:' + document.getElementById('cfg-emp-report-names').value.trim();
 
          await fetch(this.apiUrl, {
            method: 'POST',
-           body: JSON.stringify({ action: 'saveConfig', lat, lng, radius: rad, officeIp: data.ip, adminPin: '' })
+           body: JSON.stringify({ action: 'saveConfig', lat, lng, radius: rad, officeIp: data.ip, adminPin: '', empReportAccess: empReportAccess })
          });
          timeEl.innerHTML = `<span style="color:var(--primary); font-weight:600;">${new Date().toLocaleTimeString('th-TH')} (เปลี่ยนเป็น ${data.ip})</span>`;
       } else {
@@ -1917,7 +1909,12 @@ const app = {
            if(!this.historyData[log.date]) this.historyData[log.date] = { report: '', workers: {} };
            if(!this.historyData[log.date].workers[log.name]) this.historyData[log.date].workers[log.name] = { in: '-', out: '-' };
            if(log.type === 'เข้างาน') this.historyData[log.date].workers[log.name].in = log.time;
-           if(log.type === 'เลิกงาน') this.historyData[log.date].workers[log.name].out = log.time;
+           
+           // เก็บรายงานของพนักงานด้วย (ถ้ามี)
+           if(log.type === 'เลิกงาน') {
+             this.historyData[log.date].workers[log.name].out = log.time;
+             this.historyData[log.date].workers[log.name].empReport = log.empReport || '';
+           }
          });
       }
 
@@ -1966,7 +1963,6 @@ const app = {
         const workerNames = Object.keys(dayData.workers).join(' ').toLowerCase();
         const thaiDate = this.formatThaiDate(dateStr).toLowerCase();
         
-        // ค้นหาเฉพาะคำที่แสดงบนหน้าจอ ป้องกันการเจอเลขที่ซ่อนในฟอร์แมตวันที่ดิบ
         const searchPool = `${thaiDate} ${reportText} ${workerNames}`;
         return keywords.every(kw => searchPool.includes(kw));
       });
@@ -2110,6 +2106,17 @@ const app = {
           <td class="${times.out !== '-' ? 'type-out' : ''}">${this.formatThaiTime(times.out)}</td>
         `;
         tbody.appendChild(tr);
+
+        // แทรกแถวแสดงผลการปฏิบัติงานของพนักงาน ถ้ามีการบันทึกไว้
+        if (times.empReport && times.empReport.trim() !== '') {
+          const trReport = document.createElement('tr');
+          trReport.innerHTML = `
+            <td colspan="4" style="padding: 10px 16px; background: #f8fafc; font-size: 0.95em; color: var(--text-muted); border-top: none;">
+              <span style="font-weight: 600; color: var(--primary);">📝 ผลปฏิบัติงาน:</span> <span style="white-space: pre-wrap;">${times.empReport}</span>
+            </td>
+          `;
+          tbody.appendChild(trReport);
+        }
       });
     }
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
@@ -2275,6 +2282,9 @@ const app = {
         fetch('https://api.ipify.org?format=json').then(r => r.json()).catch(() => ({ ip: null }))
       ]);
 
+      // เก็บ Config ไว้ใน App State เพื่อใช้ตอนสแกนเสร็จ
+      this.sysConfig = config;
+
       if (config.officeIp && ipData.ip === config.officeIp) {
         this.currentLat = config.lat || 0; this.currentLng = config.lng || 0;
         this.setHtmlAndIcons('scan-gps-status', `<i data-lucide="wifi" style="width: 16px; height: 16px;"></i> ยืนยันตำแหน่งผ่าน Wi-Fi ออฟฟิศแล้ว`);
@@ -2391,9 +2401,40 @@ const app = {
     if (timeHtml !== '') { timeLog.innerHTML = timeHtml; timeLog.style.display = 'flex'; } 
     else { timeLog.style.display = 'none'; }
 
-    if (!status.hasIn) btnGrid.innerHTML = `<button class="btn btn-success" id="btn-clock-in" onclick="app.submitAttendance('เข้างาน')" style="padding: 16px; font-size: 1.1em;"><i data-lucide="log-in" style="width: 22px; height: 22px;"></i> บันทึกเข้างาน</button>`;
-    else if (status.hasIn && !status.hasOut) btnGrid.innerHTML = `<button class="btn btn-danger" id="btn-clock-out" onclick="app.submitAttendance('เลิกงาน')" style="padding: 16px; font-size: 1.1em;"><i data-lucide="log-out" style="width: 22px; height: 22px;"></i> บันทึกเลิกงาน</button>`;
-    else if (status.hasIn && status.hasOut) btnGrid.innerHTML = `<button class="btn btn-outline" disabled style="padding: 16px; font-size: 1.05em; background: rgba(16,185,129,0.05); color: var(--success); border-color: var(--success); opacity: 1;"><i data-lucide="check-check" style="width: 22px; height: 22px;"></i> คุณได้บันทึกเวลาครบแล้ว</button>`;
+    // เช็คสิทธิ์การเขียนรายงานของพนักงาน
+    let canReport = false;
+    if (this.sysConfig && this.sysConfig.empReportAccess) {
+      if (this.sysConfig.empReportAccess === 'all') canReport = true;
+      else if (this.sysConfig.empReportAccess.startsWith('custom:')) {
+        const allowedNames = this.sysConfig.empReportAccess.replace('custom:', '').split(',').map(n => n.trim());
+        if (allowedNames.includes(name)) canReport = true;
+      }
+    }
+
+    if (!status.hasIn) {
+      btnGrid.innerHTML = `<button class="btn btn-success" id="btn-clock-in" onclick="app.submitAttendance('เข้างาน')" style="padding: 16px; font-size: 1.1em;"><i data-lucide="log-in" style="width: 22px; height: 22px;"></i> บันทึกเข้างาน</button>`;
+    } else if (status.hasIn && !status.hasOut) {
+      // กรณีบันทึกเลิกงาน ตรวจสอบว่าต้องมีช่องกรอกรายงานหรือไม่
+      let reportHtml = '';
+      if (canReport) {
+        reportHtml = `
+          <div style="margin-bottom: 12px; text-align: left;">
+            <label style="font-size: 0.85em; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; display: block;">รายงานผลปฏิบัติงานวันนี้ (ถ้ามี)</label>
+            <textarea id="emp-report-input" class="form-control" rows="2" placeholder="พิมพ์รายงานที่นี่..." style="resize: vertical; min-height: 60px; font-size: 0.9em; padding: 10px;"></textarea>
+          </div>
+        `;
+      }
+      btnGrid.innerHTML = `
+        <div style="grid-column: 1 / -1;">
+          ${reportHtml}
+          <button class="btn btn-danger" id="btn-clock-out" onclick="app.submitAttendance('เลิกงาน')" style="padding: 16px; font-size: 1.1em; width: 100%;">
+            <i data-lucide="log-out" style="width: 22px; height: 22px;"></i> บันทึกเลิกงาน
+          </button>
+        </div>
+      `;
+    } else if (status.hasIn && status.hasOut) {
+      btnGrid.innerHTML = `<button class="btn btn-outline" disabled style="padding: 16px; font-size: 1.05em; background: rgba(16,185,129,0.05); color: var(--success); border-color: var(--success); opacity: 1;"><i data-lucide="check-check" style="width: 22px; height: 22px;"></i> คุณได้บันทึกเวลาครบแล้ว</button>`;
+    }
     
     lucide.createIcons({ root: btnGrid });
   },
@@ -2424,8 +2465,15 @@ const app = {
     if(btnIn) { btnIn.disabled = true; this.setHtmlAndIcons('btn-clock-in', '<i data-lucide="loader-2" class="loader-dark" style="animation: spin 1.5s linear infinite; width: 22px; height: 22px; border-color: transparent; border-top-color: white;"></i> กำลังบันทึก...'); }
     if(btnOut) { btnOut.disabled = true; this.setHtmlAndIcons('btn-clock-out', '<i data-lucide="loader-2" class="loader-dark" style="animation: spin 1.5s linear infinite; width: 22px; height: 22px; border-color: transparent; border-top-color: white;"></i> กำลังบันทึก...'); }
 
+    let empReportText = '';
+    const reportInput = document.getElementById('emp-report-input');
+    if (reportInput) empReportText = reportInput.value.trim();
+
     try {
-      await fetch(this.apiUrl, { method: 'POST', body: JSON.stringify({ action: 'logAttendance', name: this.matchedName, type: typeStr, lat: this.currentLat, lng: this.currentLng }) });
+      await fetch(this.apiUrl, { 
+        method: 'POST', 
+        body: JSON.stringify({ action: 'logAttendance', name: this.matchedName, type: typeStr, lat: this.currentLat, lng: this.currentLng, empReport: empReportText }) 
+      });
       await Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ!', text: `บันทึก [${typeStr}] สำหรับ ${this.matchedName} เรียบร้อยแล้ว`, timer: 2500, showConfirmButton: false });
       document.getElementById('scan-modal').style.display = 'none';
       this.navigate('view-home');
