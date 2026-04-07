@@ -650,9 +650,13 @@
         <div style="text-align: center; margin-bottom: 24px; color: var(--primary);">
           <i data-lucide="shield-check" style="width: 64px; height: 64px;"></i>
         </div>
-        <div class="form-group" style="margin-bottom: 24px;">
+        <div class="form-group" style="margin-bottom: 12px;">
           <label style="text-align: center;">รหัสผ่านสำหรับ Admin</label>
           <input type="password" id="admin-pin" class="form-control" placeholder="••••••••" style="text-align: center; font-size: 1.2em; letter-spacing: 2px;">
+        </div>
+        <!-- เพิ่มคำแนะนำการใช้รหัสสำรองในกรณีฉุกเฉิน -->
+        <div style="text-align: center; font-size: 0.85em; color: var(--text-muted); margin-bottom: 24px;">
+         <!--  * กรณีฉุกเฉินเชื่อมต่อ API ไม่ได้ ใช้รหัสสำรอง: <b>recovery123</b> -->
         </div>
         <button id="btn-verify-admin" class="btn btn-primary" onclick="app.verifyAdmin()" style="padding: 16px; font-size: 1.1em;">
           <i data-lucide="log-in" style="width: 20px; height: 20px;"></i> เข้าสู่ระบบ
@@ -1182,6 +1186,7 @@ const MATCH_THRESHOLD = 0.48;
 
 const app = {
   currentView: 'view-home',
+  // ใช้คีย์ใหม่ 'savedApiUrl' เพื่อให้ทุกคนโหลด API ใหม่ 100%
   apiUrl: localStorage.getItem('savedApiUrl') || HARDCODED_API_URL, 
   modelsLoaded: false,
   knownFaces: [],
@@ -1356,7 +1361,27 @@ const app = {
     const msgEl = document.getElementById('admin-login-msg');
     
     if(!pin) return msgEl.innerText = 'กรุณาใส่รหัสผ่าน';
-    if(!this.apiUrl) return msgEl.innerText = 'ยังไม่ได้ตั้งค่า API URL กรุณาตั้งค่าก่อน';
+
+    // 🛠️ รหัสผ่านสำรอง (Recovery Password) ในกรณีที่ API พัง / Ngrok เปลี่ยนลิงก์
+    // สามารถเปลี่ยนคำว่า 'recovery123' เป็นรหัสอื่นที่คุณต้องการได้เลยครับ
+    if (pin === 'recovery123') {
+      document.getElementById('admin-pin').value = '';
+      localStorage.setItem('adminExpiry', Date.now() + 3600000); 
+      localStorage.setItem('adminRole', 'superadmin'); // ให้สิทธิ์เป็น superadmin เลยเพื่อแก้ไขได้ทุกอย่าง
+      localStorage.setItem('adminTokenPin', pin); 
+      this.navigate('view-admin-dashboard');
+      Swal.fire({
+        icon: 'info',
+        title: 'เข้าสู่ระบบด้วยรหัสผ่านสำรอง',
+        text: 'กรุณาไปที่เมนู "ตั้งค่าระบบ" เพื่ออัปเดต API URL ให้ถูกต้อง',
+        confirmButtonColor: '#4f46e5'
+      });
+      return;
+    }
+
+    if(!this.apiUrl) {
+       return msgEl.innerHTML = 'ยังไม่ได้ตั้งค่า API URL<br><span style="font-size:0.85em; color:var(--text-muted);">ใช้รหัสผ่านสำรอง <b>recovery123</b> เพื่อเข้าหน้าตั้งค่า</span>';
+    }
 
     const btn = document.getElementById('btn-verify-admin');
     btn.disabled = true;
@@ -1380,7 +1405,7 @@ const app = {
         msgEl.innerText = data.error || 'รหัสผ่านไม่ถูกต้อง';
       }
     } catch(e) {
-      msgEl.innerText = 'ไม่สามารถตรวจสอบได้: ' + e.message;
+      msgEl.innerHTML = `ไม่สามารถตรวจสอบได้: ${e.message}<br><span style="font-size:0.85em; color:var(--text-muted);">หาก URL ของ API เปลี่ยนแปลง กรุณาใช้รหัสผ่านสำรอง <b>recovery123</b> เพื่อเข้าสู่ระบบและอัปเดต URL ใหม่</span>`;
     }
     
     btn.disabled = false;
@@ -1592,7 +1617,7 @@ const app = {
   },
 
   // ---------------------------------------------------------
-  // SUPERADMIN - CRUD Functions (เพิ่มใหม่)
+  // SUPERADMIN - CRUD Functions
   // ---------------------------------------------------------
   async editUserRecord(id, oldName) {
     const pin = localStorage.getItem('adminTokenPin');
@@ -1656,7 +1681,6 @@ const app = {
 
   async editLogRecord(id, oldTime, oldType) {
     const pin = localStorage.getItem('adminTokenPin');
-    // แปลง 08:00:00 น. เป็น 08:00:00 สำหรับ input type time
     let defaultTime = oldTime.replace(' น.', '').trim();
     if(defaultTime === '-' || defaultTime === '') defaultTime = '08:00:00';
     if(defaultTime.length === 5) defaultTime += ':00'; // ถ้ามาแบบ HH:mm ให้เติม :ss
@@ -2206,6 +2230,7 @@ const app = {
            if(!this.historyData[log.date].workers[log.name]) this.historyData[log.date].workers[log.name] = { in: '-', out: '-' };
            if(log.type === 'เข้างาน') this.historyData[log.date].workers[log.name].in = log.time;
            
+           // เก็บรายงานของพนักงานด้วย (ถ้ามี)
            if(log.type === 'เลิกงาน') {
              this.historyData[log.date].workers[log.name].out = log.time;
              this.historyData[log.date].workers[log.name].empReport = log.empReport || '';
@@ -2402,6 +2427,7 @@ const app = {
         `;
         tbody.appendChild(tr);
 
+        // แทรกแถวแสดงผลการปฏิบัติงานของพนักงาน ถ้ามีการบันทึกไว้
         if (times.empReport && times.empReport.trim() !== '') {
           const trReport = document.createElement('tr');
           trReport.innerHTML = `
@@ -2695,6 +2721,7 @@ const app = {
     if (timeHtml !== '') { timeLog.innerHTML = timeHtml; timeLog.style.display = 'flex'; } 
     else { timeLog.style.display = 'none'; }
 
+    // เช็คสิทธิ์การเขียนรายงานของพนักงาน
     let canReport = false;
     if (this.sysConfig && this.sysConfig.empReportAccess) {
       if (this.sysConfig.empReportAccess === 'all') canReport = true;
