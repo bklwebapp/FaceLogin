@@ -718,8 +718,9 @@
           <i data-lucide="link" style="width: 20px; height: 20px;"></i> การเชื่อมต่อ API
         </div>
         <div class="form-group">
-          <label>Google Apps Script Web App URL</label>
-          <input type="url" id="cfg-api" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+          <!-- 🛠️ แก้ไขคำอธิบายเพื่อให้สอดคล้องกับ PHP/MySQL -->
+          <label>API URL (รองรับไฟล์ api.php หรือ Google Apps Script)</label>
+          <input type="url" id="cfg-api" class="form-control" placeholder="https://yourdomain.com/api.php หรือ https://script.google...">
         </div>
       </div>
 
@@ -1143,6 +1144,21 @@
      APPLICATION LOGIC (JAVASCRIPT)
      ========================================================= -->
 <script>
+// --- ตั้งค่า Override Fetch API สำหรับทะลุบล็อคของ Ngrok ---
+const originalFetch = window.fetch;
+window.fetch = function() {
+  let [resource, config] = arguments;
+  
+  // เช็คว่าถ้า URL มีคำว่า ngrok ให้เพิ่ม Header ทะลุบล็อค
+  if (typeof resource === 'string' && resource.includes('ngrok')) {
+    config = config || {};
+    config.headers = config.headers || {};
+    config.headers['ngrok-skip-browser-warning'] = '69420';
+  }
+  
+  return originalFetch(resource, config);
+};
+
 // --- การตั้งค่าเริ่มต้น (HARDCODED_API_URL) ---
 const HARDCODED_API_URL = 'https://script.google.com/macros/s/AKfycbxdMDJFsTYQSvA2tC6qfJody0TkJqO76d5rSFO78GQDW5nxYqMsMW4w27oIaXQhcEEl/exec';
 const MATCH_THRESHOLD = 0.48; 
