@@ -811,12 +811,12 @@
         <div style="margin-bottom: 20px; font-weight: 700; font-size: 1.1em; color: var(--danger); display: flex; align-items: center; gap: 10px;">
           <i data-lucide="lock" style="width: 20px; height: 20px;"></i> ความปลอดภัย (เปลี่ยนรหัสผ่าน)
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
           <div class="form-group">
             <label>รหัสผ่าน Admin ทั่วไป</label>
             <input type="text" id="cfg-admin-pin" class="form-control" placeholder="ปล่อยว่างหากไม่เปลี่ยน">
           </div>
-          <div class="form-group">
+          <div class="form-group" id="wrap-superadmin-pin">
             <label style="color: var(--danger);">รหัสผ่าน Superadmin</label>
             <input type="text" id="cfg-superadmin-pin" class="form-control" placeholder="ปล่อยว่างหากไม่เปลี่ยน">
           </div>
@@ -1397,6 +1397,14 @@ const app = {
 
   async loadConfigData() {
     document.getElementById('cfg-api').value = this.apiUrl;
+    
+    // จัดการสิทธิ์การแสดงผลช่องเปลี่ยนรหัส Superadmin
+    const role = localStorage.getItem('adminRole');
+    const wrapSuperAdmin = document.getElementById('wrap-superadmin-pin');
+    if (wrapSuperAdmin) {
+      wrapSuperAdmin.style.display = (role === 'superadmin') ? 'block' : 'none';
+    }
+
     if(!this.apiUrl) return;
     try {
       const res = await fetch(this.apiUrl + '?action=getConfig').then(r => r.json());
