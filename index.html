@@ -1144,28 +1144,35 @@
      APPLICATION LOGIC (JAVASCRIPT)
      ========================================================= -->
 <script>
+// --- ล้างแคช API เก่าอัตโนมัติ เพื่อบังคับให้อุปกรณ์ทุกเครื่องใช้ API ใหม่ ---
+if (localStorage.getItem('gasApiUrl')) {
+  localStorage.removeItem('gasApiUrl');
+}
+
 // --- ตั้งค่า Override Fetch API สำหรับทะลุบล็อคของ Ngrok ---
 const originalFetch = window.fetch;
 window.fetch = function() {
   let [resource, config] = arguments;
   
-  // เช็คว่าถ้า URL มีคำว่า ngrok ให้เพิ่ม Header ทะลุบล็อค
   if (typeof resource === 'string' && resource.includes('ngrok')) {
     config = config || {};
     config.headers = config.headers || {};
     config.headers['ngrok-skip-browser-warning'] = '69420';
+    config.headers['Bypass-Tunnel-Reminder'] = 'true';
   }
   
   return originalFetch(resource, config);
 };
 
-// --- การตั้งค่าเริ่มต้น (HARDCODED_API_URL) ---
+// --- การตั้งค่าเริ่มต้น (API URL) ---
+// ⚠️ เปลี่ยนลิงก์ด้านล่างนี้เป็นลิงก์ Ngrok หรือ PHP API ของคุณก่อนอัปโหลดขึ้น GitHub
 const HARDCODED_API_URL = 'https://11e4aa384b4e.ngrok-free.app/facelogin/api.php';
 const MATCH_THRESHOLD = 0.48; 
 
 const app = {
   currentView: 'view-home',
-  apiUrl: localStorage.getItem('gasApiUrl') || HARDCODED_API_URL, 
+  // ใช้คีย์ใหม่ 'savedApiUrl' เพื่อให้ทุกคนโหลด API ใหม่ 100%
+  apiUrl: localStorage.getItem('savedApiUrl') || HARDCODED_API_URL, 
   modelsLoaded: false,
   knownFaces: [],
   currentStream: null,
@@ -1457,7 +1464,7 @@ const app = {
 
     if(!api) return msg.innerHTML = '<span style="color:var(--danger)">กรุณาใส่ API URL</span>';
     
-    localStorage.setItem('gasApiUrl', api);
+    localStorage.setItem('savedApiUrl', api);
     this.apiUrl = api;
     this.init(); 
 
